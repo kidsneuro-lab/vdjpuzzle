@@ -1,0 +1,38 @@
+name: vdjpuzzle
+channels:
+- bioconda
+- defaults
+dependencies:
+- bowtie=1.2.0=py27_0
+- bowtie2=2.3.0=py27_1
+- collectl=4.0.4=1
+- fastool=0.1.4=1
+- igblast=1.5.0=2
+- java-jdk=8.0.92=1
+- jellyfish=2.2.6=0
+- migmap=1.0.2=0
+- parafly=r2013_01_21=0
+- perl-app-cpanminus=1.7039=2
+- perl-module-build=0.4214=2
+- perl-threaded=5.22.0=10
+- samtools=1.4.1=0
+- slclust=02022010=1
+- tbb=4.4_20150728=0
+- tophat=2.1.1=py27_0
+- trimmomatic=0.36=3
+- trinity=2.4.0=5
+- curl=7.52.1=0
+- libgcc=5.2.0=0
+- openjdk=8.0.121=1
+- openssl=1.0.2l=0
+- pip=9.0.1=py27_1
+- python=2.7.13=0
+- readline=6.2=2
+- setuptools=27.2.0=py27_0
+- sqlite=3.13.0=0
+- tk=8.5.18=0
+- wheel=0.29.0=py27_0
+- xz=5.2.2=1
+- zlib=1.2.8=3
+prefix: /short/va1/dk0741/miniconda3/envs/vdjpuzzle
+
