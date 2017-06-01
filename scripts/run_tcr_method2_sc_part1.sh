@@ -61,7 +61,7 @@ P7: $param7
 P8: $param8
 P9: $param9"
 
-echo "$ENSEMBL ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
+echo "$VDJPUZZLE_GENOME_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
 if [ "$param6" -ge 1 ]; then
 	PAIR_1="${CELL_PATH}/PAIRED_${param2}1.fastq.gz"
@@ -70,11 +70,11 @@ if [ "$param6" -ge 1 ]; then
 	UNPAIR_2="${CELL_PATH}/UNPAIRED_${param2}2.fastq.gz"
 
 	trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	tophat -o $Q3/out/tophat_run1 -p $NTHREADS $ENSEMBL $PAIR_1
-	tophat -o $Q3/out/tophat_run2 -p $NTHREADS $ENSEMBL $PAIR_2
+	tophat -o $Q3/out/tophat_run1 -p $NTHREADS $VDJPUZZLE_GENOME_INDEX $PAIR_1
+	tophat -o $Q3/out/tophat_run2 -p $NTHREADS $VDJPUZZLE_GENOME_INDEX $PAIR_2
 else
-	tophat -o $Q3/out/tophat_run1 -p $NTHREADS $ENSEMBL $Q1
-	tophat -o $Q3/out/tophat_run2 -p $NTHREADS $ENSEMBL $Q2
+	tophat -o $Q3/out/tophat_run1 -p $NTHREADS $VDJPUZZLE_GENOME_INDEX $Q1
+	tophat -o $Q3/out/tophat_run2 -p $NTHREADS $VDJPUZZLE_GENOME_INDEX $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then

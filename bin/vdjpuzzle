@@ -3,22 +3,24 @@
 #LATEST VERSION
 
 function printHelp {
-	echo "VDJ Puzzle v1.0"
-	echo "Usage: ./VDJPuzzle.sh directory_name [option]"
-	echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
-	echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
-	echo "--CPU=n\truns with n processes"
-	echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
-	echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
-	echo "--only-statistics\texecutes only summary statistics script"
-	echo "--no-statistics\tdo not execute summary statistics script"
-	echo "--transcriptomic\tBLAHHH"
-	echo "--trim\tTrims reads using Trimmomatic"
-	echo "--counts\tBLAHHH"
+	>&2 echo "VDJ Puzzle v1.0"
+	>&2 echo "Usage: ./VDJPuzzle.sh directory_name [option]"
+	>&2 echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
+	>&2 echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
+	>&2 echo "--CPU=n\truns with n processes"
+	>&2 echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
+	>&2 echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
+	>&2 echo "--only-statistics\texecutes only summary statistics script"
+	>&2 echo "--no-statistics\tdo not execute summary statistics script"
+	>&2 echo "--transcriptomic\tBLAHHH"
+	>&2 echo "--trim\tTrims reads using Trimmomatic"
+	>&2 echo "--counts\tBLAHHH"
+	>&2 echo "--genome\t/path/to/genome.fasta"
+	>&2 echo "--annotation\t/path/to/annotation.gtf"
 }
 
-export ENSEMBL=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
-export ANNOTATION=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Genes/genes.gtf
+#export ENSEMBL=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
+#export ANNOTATION=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Genes/genes.gtf
 
 function testArg {
 	if [[ "$1" =~ $2 ]]; then
@@ -40,13 +42,14 @@ function waitForProcess {
 }
 
 ### TRIMMING PARAMETERS ###
-export ADAPTERS=${CONDA_PREFIX}/share/trimmomatic/adapters/NexteraPE-PE.fa
 export LEADING=3
 export TRAILING=3
 export WINDOW_LEN=4
 export WINDOW_QUAL=15
 export MINLEN=50
 export AVGQUAL=20
+VDJPUZZLE_ADAPTERS=${CONDA_PREFIX}/share/trimmomatic/adapters/NexteraPE-PE.fa
+
 
 #SET DEFAULT PARAMETERS
 PARALLEL=1
@@ -138,6 +141,21 @@ do
 		shift
 		;;
 
+		--genome=*)
+		VDJPUZZLE_GENOME="${i#*=}"
+		shift
+		;;
+
+		--adapters=*)
+		VDJPUZZLE_ADAPTERS="${#*=}"
+		shift
+		;;
+
+		--annotation=*)
+		export VDJPUZZLE_ANNOTATION="${i#*=}"
+		shift
+		;;
+
 		*)
 		if [[ ! -d "$i" ]]; then
 			echo "Invalid SC_RNA_SEQ directory: $i"
@@ -150,6 +168,16 @@ do
 		;;
 	esac
 done
+
+if [[ -z ${VDJPUZZLE_ANNOTATION+x} | -z ${VDJPUZZLE_GENOME+x} ]]; then
+	>&2 echo "VDJPuzzle requires a reference genome and annotation."
+	printHelp
+	exit 1
+fi
+
+export VDJPUZZLE_ADAPTERS
+export VDJPUZZLE_ANNOTATION
+export VDJPUZZLE_GENOME
 
 if [[ -z "$RNADIR" ]]; then
 	echo "No inputted cell directory!"
@@ -245,7 +273,7 @@ fi
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	find "$CUFFOUTPUT"/* -type d -exec echo -ne "{}/abundances.cxb\t" \; -exec sh -c "echo {} | sed 's/.*\///'" \; >> $CUFFOUTPUT/sample_sheet.txt
-	cuffnorm --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
+	cuffnorm --use-sample-sheet -o CuffNorm $VDJPUZZLE_ANNOTATION $CUFFOUTPUT/sample_sheet.txt
 fi
 
 rm -r preliminary
@@ -256,7 +284,7 @@ if [ "$COUNTS" -ge 1 ]; then
 	mkdir $COUNTOUTPUT
 	find preliminary -name 'accepted_hits.bam' -type f > $COUNTOUTPUT/bam_files.txt
 	mapfile -t <$COUNTOUTPUT/bam_files.txt
-	$featureCounts --primary -a $ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
+	$featureCounts --primary -a $VDJPUZZLE_ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
 	sed 1d "$COUNTOUTPUT/featureCounts.csv" | cut -f1,7- | sed s/Geneid/id/ > "$COUNTOUTPUT/featureCounts_formatted.csv"
 fi
 
