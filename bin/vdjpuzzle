@@ -1,26 +1,21 @@
 #!/bin/bash
-#Source code implemented by Simone Rizzetto (UNSW, Australia), for enquiries and documentation please refer to https://github.com/Simo-88/VDJPuzzle
-#LATEST VERSION
+
+# THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
 function printHelp {
-	>&2 echo "VDJ Puzzle v1.0"
-	>&2 echo "Usage: ./VDJPuzzle.sh directory_name [option]"
-	>&2 echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
-	>&2 echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
-	>&2 echo "--CPU=n\truns with n processes"
-	>&2 echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
-	>&2 echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
-	>&2 echo "--only-statistics\texecutes only summary statistics script"
-	>&2 echo "--no-statistics\tdo not execute summary statistics script"
-	>&2 echo "--transcriptomic\tBLAHHH"
-	>&2 echo "--trim\tTrims reads using Trimmomatic"
-	>&2 echo "--counts\tBLAHHH"
-	>&2 echo "--genome\t/path/to/genome.fasta"
-	>&2 echo "--annotation\t/path/to/annotation.gtf"
+	echo "VDJ Puzzle v1.0"
+	echo "Usage: ./VDJPuzzle.sh directory_name [option]"
+	echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
+	echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
+	echo "--CPU=n\truns with n processes"
+	echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
+	echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
+	echo "--only-statistics\texecutes only summary statistics script"
+	echo "--no-statistics\tdo not execute summary statistics script"
+	echo "--transcriptomic\tBLAHHH"
+	echo "--trim\tTrims reads using Trimmomatic"
+	echo "--counts\tBLAHHH"
 }
-
-#export ENSEMBL=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
-#export ANNOTATION=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Genes/genes.gtf
 
 function testArg {
 	if [[ "$1" =~ $2 ]]; then
@@ -41,15 +36,54 @@ function waitForProcess {
 	done
 }
 
+# module unload samtools/0.1.18
+# module load tophat/2.0.7
+# module unload samtools/1.3.1
+# module load samtools/0.1.18
+# module load bowtie2/2.1.0
+#
+# module load cufflinks/2.2.1
+# module load bedtools/2.26.0
+# module load blast/2.2.28+
+
+#CONFIGURE SCRIPT PATHS
+# export PATH=/apps/bowtie2/2.1.0/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
+# export PATH=/apps/samtools/0.1.18/bin/:$PATH
+# export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/Blast/usr/bin/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+# export PATH=/apps/cufflinks/2.2.1/bin/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/cufflinks-2.2.1.Linux_x86_64/:$PATH
+export MIGMAP=`which migmap` #/short/va1/fzl561/scRNAseq/Tools/migmap-0.9.7/migmap-0.9.7.jar
+export trinitypath=`which Trinity` #/short/va1/fzl561/scRNAseq/Tools/trinityrnaseq-2.0.6/Trinity
+export TOPHAT=`which tophat2` # /apps/tophat/2.0.7/tophat2
+export BOWTIE=`which bowtie2` # /apps/bowtie2/2.1.0/bowtie2
+export BOWTIEBUILD=`which bowtie2-build` # /apps/bowtie2/2.1.0/bowtie2-build
+export SAMTOOLS=`which samtools` # /apps/samtools/0.1.18/bin/samtools
+export BEDTOOLS=`which intersectBed` # /apps/bedtools/2.26.0/bin/intersectBed
+#export JAVA18=/apps/java/jdk1.8.0_60/bin/java #Java18 is included in the package so don't edit this path
+if [[ ! -z ${CONDA_PREFIX+x} ]]; then
+	export TRIMMOMATIC=`which trimmomatic` # /short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
+else
+	export TRIMMOMATIC=/short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
+fi
+export featureCounts=`which featureCounts` # /short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
+
 ### TRIMMING PARAMETERS ###
+
+
+if [[ ! -z ${CONDA_PREFIX+x} ]]; then
+	export ADAPTERS=${CONDA_PREFIX}/share/trimmomatic/adapters/NexteraPE-PE.fa
+else
+	export ADAPTERS=$(echo $TRIMMOMATIC | egrep -o ".*\/")adapters/NexteraPE-PE.fa
+fi
 export LEADING=3
 export TRAILING=3
 export WINDOW_LEN=4
 export WINDOW_QUAL=15
 export MINLEN=50
 export AVGQUAL=20
-VDJPUZZLE_ADAPTERS=${CONDA_PREFIX}/share/trimmomatic/adapters/NexteraPE-PE.fa
-
 
 #SET DEFAULT PARAMETERS
 PARALLEL=1
@@ -141,20 +175,27 @@ do
 		shift
 		;;
 
-		--genome=*)
-		VDJPUZZLE_GENOME="${i#*=}"
+		--bowtie-index)
+		BOWTIE_INDEX="${i#*=}"
+		if [[ ! -f "${BOWTIE_INDEX}.1.bt2" ]]; then
+			>&2 echo "Error: could not find index at ${BOWTIE_INDEX}.1.bt2"
+			printHelp
+			exit 1
+		fi
+		export BOWTIE_INDEX
+		# default /short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
 		shift
 		;;
 
-		--adapters=*)
-		VDJPUZZLE_ADAPTERS="${#*=}"
-		shift
-		;;
-
-		--annotation=*)
-		export VDJPUZZLE_ANNOTATION="${i#*=}"
-		shift
-		;;
+    --gtf)
+		ANNOTATION="${i#*=}"
+		if [[ ! -f "${ANNOTATION}" ]]; then
+			>&2 echo "Error: could not find GTF annotation at ${ANNOTATION}."
+			printHelp
+			exit 1
+		fi
+		export ANNOTATION
+		# default /short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
 
 		*)
 		if [[ ! -d "$i" ]]; then
@@ -168,16 +209,6 @@ do
 		;;
 	esac
 done
-
-if [[ -z ${VDJPUZZLE_ANNOTATION+x} | -z ${VDJPUZZLE_GENOME+x} ]]; then
-	>&2 echo "VDJPuzzle requires a reference genome and annotation."
-	printHelp
-	exit 1
-fi
-
-export VDJPUZZLE_ADAPTERS
-export VDJPUZZLE_ANNOTATION
-export VDJPUZZLE_GENOME
 
 if [[ -z "$RNADIR" ]]; then
 	echo "No inputted cell directory!"
@@ -201,9 +232,12 @@ if [[ $TRANSCRIPTOMIC -ge 1 ]]; then
 	cell_type=''
 fi
 
+export ENSEMBL=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
+export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
+
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	export $chain=~/binf3111/VDJPuzzle/Tools/refGenome/BED_files/${chain//C}_$ORGANISM.bed
+	export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
 export CUFFOUTPUT=$PWD/CuffQuant
@@ -245,7 +279,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS scripts/run_tcr_method2_sc_part1.sh
+			qsub -N "p1_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS run_tcr_method2_sc_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -264,7 +298,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			scripts/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			./run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
 		fi
 		N=$((N+1))
 	done
@@ -273,7 +307,7 @@ fi
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	find "$CUFFOUTPUT"/* -type d -exec echo -ne "{}/abundances.cxb\t" \; -exec sh -c "echo {} | sed 's/.*\///'" \; >> $CUFFOUTPUT/sample_sheet.txt
-	cuffnorm --use-sample-sheet -o CuffNorm $VDJPUZZLE_ANNOTATION $CUFFOUTPUT/sample_sheet.txt
+	cuffnorm --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
 fi
 
 rm -r preliminary
@@ -284,7 +318,7 @@ if [ "$COUNTS" -ge 1 ]; then
 	mkdir $COUNTOUTPUT
 	find preliminary -name 'accepted_hits.bam' -type f > $COUNTOUTPUT/bam_files.txt
 	mapfile -t <$COUNTOUTPUT/bam_files.txt
-	$featureCounts --primary -a $VDJPUZZLE_ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
+	$featureCounts --primary -a $ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
 	sed 1d "$COUNTOUTPUT/featureCounts.csv" | cut -f1,7- | sed s/Geneid/id/ > "$COUNTOUTPUT/featureCounts_formatted.csv"
 fi
 
@@ -307,7 +341,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p2_${TYPE}_$N" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}" scripts/run_tcr_method2_sc_part2.sh
+			qsub -N "p2_${TYPE}_$N" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}" run_tcr_method2_sc_part2.sh
 		fi
 		N=$((N+1))
 	done
@@ -326,7 +360,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			scripts/run_tcr_method2_sc_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
+			./run_tcr_method2_sc_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
 			N=$((N+1))
 		fi
 	done
@@ -342,7 +376,7 @@ done
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	bowtie2-build -f all_sequences_${CHAIN_PREFIX_ARRAY[$index]}.fa $chain
+	$BOWTIEBUILD -f all_sequences_${CHAIN_PREFIX_ARRAY[$index]}.fa $chain
 	index=$((index+1))
 done
 
@@ -364,7 +398,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS scripts/run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -383,7 +417,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			scripts/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			./run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
 			N=$((N+1))
 		fi
 	done
@@ -395,13 +429,13 @@ mkdir TCRsequences
 mv VDJ_p3* TCRsequences/
 
 # UPDATE SUMMARY FOLDER WITH LATEST
-mkdir -p $PWD/tmp
+echo '#!/bin/bash' > mvTCR.sh
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> $PWD/tmp/mvTCR.sh
+	find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mvTCR.sh
 done
-bash $PWD/tmp/mvTCR.sh
-rm -f $PWD/tmp/mvTCR.sh
+chmod a+x mvTCR.sh
+./mvTCR.sh
 
 if [ "$RUNR" -ge 1 ]; then
 
@@ -444,120 +478,123 @@ fi
 # Requires fasta file of reference (reconstructed) sequences and paired end reads
 # Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
 
-for chain in "${CHAIN_ARRAY[@]}"
-do
-	R1="reads_${chain}_1.fastq"
-	R2="reads_${chain}_2.fastq"
+# export PATH=/apps/bwa/0.7.12/:$PATH
+# export PATH=/home/fzl561/scRNAseq/Tools/bcftools-1.3.1/bin/:$PATH
 
-	# Set up fasta filename containing all reconstructed sequences
-	if [[ $TYPE == 't' ]] ; then
-		# tcr_[ab].fa
-		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
-	else
-		# ig_[hkl].fa
-		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
-	fi
+# for chain in "${CHAIN_ARRAY[@]}"
+# do
+# 	R1="reads_${chain}_1.fastq"
+# 	R2="reads_${chain}_2.fastq"
 
-	# create directory for storing results
-	OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
+# 	# Set up fasta filename containing all reconstructed sequences
+# 	if [[ $TYPE == 't' ]] ; then
+# 		# tcr_[ab].fa
+# 		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
+# 	else
+# 		# ig_[hkl].fa
+# 		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
+# 	fi
 
-	echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
-	exit
+# 	# create directory for storing results
+# 	OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
 
-	if [[ -e $OUTPUT ]]
-	then
-		echo "Output directory already exits, exiting ..."
-		exit 1
-	fi
-	mkdir $OUTPUT
+# 	echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
+# 	exit
 
-	for cell in $CURDIR/TCRsequences/*
-	do
-		# read original data
-		ALL_FASTA=$cell$ORIG_REF
-		READS_1=$cell$R1
-		READS_2=$cell$R2
+# 	if [[ -e $OUTPUT ]]
+# 	then
+# 		echo "Output directory already exits, exiting ..."
+# 		exit 1
+# 	fi
+# 	mkdir $OUTPUT
 
-		# skip the case/cell where a directory does not have required files
-		if [ -e $ALL_FASTA -a -e $READS_1 -a -e $READS_2 ]
-		then
-			echo "[current] Reference file and reads found."
-			sleep 2
-		else
-			echo "[current] Reference file and reads were not found ... moving to next cell."
-			continue
-		fi
+# 	for cell in $CURDIR/TCRsequences/*
+# 	do
+# 		# read original data
+# 		ALL_FASTA=$cell$ORIG_REF
+# 		READS_1=$cell$R1
+# 		READS_2=$cell$R2
 
-		# create subdirectory for each cell analysed
-		mkdir $OUTPUT/$(basename $cell)
-		cd $OUTPUT/$(basename $cell)
+# 		# skip the case/cell where a directory does not have required files
+# 		if [ -e $ALL_FASTA -a -e $READS_1 -a -e $READS_2 ]
+# 		then
+# 			echo "[current] Reference file and reads found."
+# 			sleep 2
+# 		else
+# 			echo "[current] Reference file and reads were not found ... moving to next cell."
+# 			continue
+# 		fi
 
-		# construct path for final output file
-		CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
-		rm -vf accepted_seq_names.txt
+# 		# create subdirectory for each cell analysed
+# 		mkdir $OUTPUT/$(basename $cell)
+# 		cd $OUTPUT/$(basename $cell)
 
-		# orange.intersect
-		if [[ $(hostname) == 'orange' ]] ; then
-			migmap -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-		else
-			# sudo required for write permission on cluster DK: why?
-			sudo migmap -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-		fi
+# 		# construct path for final output file
+# 		CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
+# 		rm -vf accepted_seq_names.txt
 
-		# first tab delimited entry from migmap is the sequence name
-		# create a file with names of identified sequences
-		cut -f1 | while read x ; do
-				if [[ "$x" == ">"* ]] ; then
-					echo "$x" >> accepted_seq_names.txt;
-				fi;
-			done
+# 		# orange.intersect
+# 		if [[ $(hostname) == 'orange' ]] ; then
+# 			$JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+# 		else
+# 			# sudo required for write permission on cluster
+# 			sudo $JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+# 		fi
 
-		rm -vf $CORR_SEQ
+# 		# first tab delimited entry from migmap is the sequence name
+# 		# create a file with names of identified sequences
+# 		cut -f1 | while read x ; do
+# 				if [[ "$x" == ">"* ]] ; then
+# 					echo "$x" >> accepted_seq_names.txt;
+# 				fi;
+# 			done
 
-		# go through identified sequences and use as reference for alignment
-		while read seq_name; do
-			# create a fasta reference file with a single sequence, index it as required
-			python $CURDIR/scripts/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
-			samtools faidx reference.fasta
-			bwa index reference.fasta
+# 		rm -vf $CORR_SEQ
 
-			# samtools v1.3.1
-			bwa mem reference.fasta $READS_1 $READS_2 | samtools view -b | samtools sort -o alignment.bam
+# 		# go through identified sequences and use as reference for alignment
+# 		while read seq_name; do
+# 			# create a fasta reference file with a single sequence, index it as required
+# 			python $CURDIR/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
+# 			samtools faidx reference.fasta
+# 			bwa index reference.fasta
 
-			samtools index alignment.bam
-			echo "[current] samtools index finished"
+# 			# samtools v1.3.1
+# 			bwa mem reference.fasta $READS_1 $READS_2 | samtools view -b | samtools sort -o alignment.bam
 
-			samtools mpileup -uf reference.fasta alignment.bam |
+# 			samtools index alignment.bam
+# 			echo "[current] samtools index finished"
 
-			if [[ $(hostname) == 'orange' ]] ; then
-				bcftools call -c | python $CURDIR/scripts/mpileup2cons.py reference.fasta
-			else
-				# cluster 21
-				bcftools view -cg - | python $CURDIR/scripts/mpileup2cons.py reference.fasta
-			fi
+# 			samtools mpileup -uf reference.fasta alignment.bam |
 
-			# http://samtools.sourceforge.net/mpileup.shtml
-			# alternative but produces truncated consensus and ambiguous bases
-			# use vcfutils, skip first line which is the sequence ID, convert to a single line, stop after the + character (now have the consensus sequence)
-			# samtools mpileup -uf reference.fasta alignment.bam | bcftools view -cg - |
-				# vcfutils.pl vcf2fq | tail -n +2 | tr -d '\n' | cut -f1 -d +
+# 			if [[ $(hostname) == 'orange' ]] ; then
+# 				bcftools call -c | python $CURDIR/mpileup2cons.py reference.fasta
+# 			else
+# 				# cluster 21
+# 				bcftools view -cg - | python $CURDIR/mpileup2cons.py reference.fasta
+# 			fi
 
-			echo "[current] writing sequence to file ..."
-			cat new_reference.fasta >> $CORR_SEQ
-			echo -e "[current] Output located at:\n"$CORR_SEQ
+# 			# http://samtools.sourceforge.net/mpileup.shtml
+# 			# alternative but produces truncated consensus and ambiguous bases
+# 			# use vcfutils, skip first line which is the sequence ID, convert to a single line, stop after the + character (now have the consensus sequence)
+# 			# samtools mpileup -uf reference.fasta alignment.bam | bcftools view -cg - |
+# 				# vcfutils.pl vcf2fq | tail -n +2 | tr -d '\n' | cut -f1 -d +
 
-			# Even if we don't remove, they will be overwritten when the enxt sequence is processed.
-			rm -vf new_reference.fasta
-			rm -vf reference.fasta*
-			rm -vf alignment.bam*
+# 			echo "[current] writing sequence to file ..."
+# 			cat new_reference.fasta >> $CORR_SEQ
+# 			echo -e "[current] Output located at:\n"$CORR_SEQ
 
-			echo "[current] sleeping for 10 then moving to next sequence ..." && sleep 10
+# 			# Even if we don't remove, they will be overwritten when the enxt sequence is processed.
+# 			rm -vf new_reference.fasta
+# 			rm -vf reference.fasta*
+# 			rm -vf alignment.bam*
 
-		done <accepted_seq_names.txt
-		rm -vf accepted_seq_names.txt
-		echo "[current] sleeping for 10 then moving to next cell ..." && sleep 10
-	done
-done
+# 			echo "[current] sleeping for 10 then moving to next sequence ..." && sleep 10
+
+# 		done <accepted_seq_names.txt
+# 		rm -vf accepted_seq_names.txt
+# 		echo "[current] sleeping for 10 then moving to next cell ..." && sleep 10
+# 	done
+# done
 
 
 if [[ $TYPE == 't' ]]; then
