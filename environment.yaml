@@ -4,6 +4,7 @@ channels:
 - defaults
 dependencies:
 - bcftools=1.4.1=0
+- bedops=2.4.26=0
 - bedtools=2.26.0=0
 - bowtie=1.2.0=py27_0
 - bowtie2=2.3.0=py27_1
