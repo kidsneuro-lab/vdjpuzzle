@@ -45,17 +45,17 @@ Q4=$param4
 CHAIN_ARRAY=($param7)
 CHAIN_PREFIX_ARRAY=($param8)
 
-export PATH=/apps/bowtie2/2.1.0/:$PATH
-export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
-export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
-export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
-module unload samtools/0.1.18
-module load tophat/2.0.7
-module unload samtools/1.3.1
-module load samtools/0.1.18
-module load bowtie2/2.1.0
-module load cufflinks/2.2.1
-module load bedtools/2.26.0 
+# export PATH=/apps/bowtie2/2.1.0/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
+# export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
+# export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+# module unload samtools/0.1.18
+# module load tophat/2.0.7
+# module unload samtools/1.3.1
+# module load samtools/0.1.18
+# module load bowtie2/2.1.0
+# module load cufflinks/2.2.1
+# module load bedtools/2.26.0
 
 rm $Q3/overlapping_reads*
 for prefix in "${CHAIN_PREFIX_ARRAY[@]}"
@@ -76,20 +76,20 @@ P7: $param7
 P8: $param8
 P9: $param9"
 
-echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $ENSEMBL ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
+echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
 if [ "$param6" -ge 1 ]; then
 	PAIR_1="${CELL_PATH}/PAIRED_${param2}1.fastq.gz"
 	PAIR_2="${CELL_PATH}/PAIRED_${param2}2.fastq.gz"
 	UNPAIR_1="${CELL_PATH}/UNPAIRED_${param2}1.fastq.gz"
 	UNPAIR_2="${CELL_PATH}/UNPAIRED_${param2}2.fastq.gz"
-	
-	java -jar $TRIMMOMATIC PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $ENSEMBL $PAIR_1
-	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $ENSEMBL $PAIR_2
+
+	$TRIMMOMATIC PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
+	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
+	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
 else
-	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $ENSEMBL $Q1
-	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $ENSEMBL $Q2
+	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $Q1
+	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then
@@ -97,20 +97,20 @@ if [ "$param5" -ge 1 ]; then
 	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_run2/accepted_hits.bam
 fi
 
-module unload samtools/0.1.18
-module load samtools/1.2
+# module unload samtools/0.1.18
+# module load samtools/1.2
 
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	if [[ "param5" -ge 1 ]]; then
-		intersectBed -wa -abam $Q3/out/tophat_run1/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run1/overlapping_reads.bam 
-		intersectBed -wa -abam $Q3/out/tophat_run2/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run2/overlapping_reads.bam 
-		samtools view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/overlapping_reads.bam
-		samtools view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/overlapping_reads.bam
+		$BEDTOOLS -wa -abam $Q3/out/tophat_run1/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run1/overlapping_reads.bam
+		$BEDTOOLS -wa -abam $Q3/out/tophat_run2/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run2/overlapping_reads.bam
+		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/overlapping_reads.bam
+		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/overlapping_reads.bam
 	else
-		samtools view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/accepted_hits.bam
-		samtools view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/accepted_hits.bam
+		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/accepted_hits.bam
+		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/accepted_hits.bam
 	fi
 
 	cat $Q3/out/tophat_run1/overlapping_reads.sam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads_1.fq
@@ -135,17 +135,16 @@ do
 	index=$((index+1))
 done
 
-module unload java/jdk1.7.0_25
-module load java/jdk1.8.0_60
-module load blast/2.2.28+
+# module unload java/jdk1.7.0_25
+# module load java/jdk1.8.0_60
+# module load blast/2.2.28+
 
 mkdir $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	java -jar $MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	$MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
 
 rm $CELL_PATH/merged*
 gzip $CELL_PATH/*.fastq
-

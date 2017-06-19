@@ -36,7 +36,7 @@ fi
 
 CELL_PATH=$param1
 
-export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+#export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
 
 
 Q1="${CELL_PATH}/${param2}1.fastq.gz"
@@ -76,9 +76,9 @@ do
 	$BOWTIE --no-unal -p $param8 -k 1 --np 0 --rdg 1,1 --rfg 1,1 -x $Q4/assembledTCR_genome/${chain} -1 $Q1 -2 $Q2 --al-conc $Q3/reads_${chain}_%.fastq -S $Q4/${chain}.sam
 done
 
-module unload samtools/0.1.18
-module load samtools/1.2
-	
+# module unload samtools/0.1.18
+# module load samtools/1.2
+
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	$trinitypath --left $Q3/reads_TCRB_1.fastq --right $Q3/reads_TCRB_2.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
@@ -86,14 +86,14 @@ do
 	rm -r $Q3/trinity_out_dir
 done
 
-module unload java/jdk1.7.0_25
-module load java/jdk1.8.0_60
-module load blast/2.2.28+
+# module unload java/jdk1.7.0_25
+# module load java/jdk1.8.0_60
+# module load blast/2.2.28+
 
 mkdir $param4/summary
 
 echo "Running MIGMAP"
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	java -jar $MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	$MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done

@@ -2,6 +2,20 @@
 
 # THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
+# get the directory of the current script
+# from https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+
+# set relative directory variables
+BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SCRIPTS_DIR=$BIN_DIR/../scripts
+SHARE_DIR=$BIN_DIR/../share
+
 function printHelp {
 	echo "VDJ Puzzle v1.0"
 	echo "Usage: ./VDJPuzzle.sh directory_name [option]"
@@ -232,12 +246,13 @@ if [[ $TRANSCRIPTOMIC -ge 1 ]]; then
 	cell_type=''
 fi
 
-export ENSEMBL=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
-export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
+#export ENSEMBL=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome # now BOWTIE_INDEX
+#export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
+	export $chain=$SHARE_DIR/bed_files/${chain//C}_$ORGANISM.bed
+	#export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
 export CUFFOUTPUT=$PWD/CuffQuant
@@ -279,7 +294,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS run_tcr_method2_sc_part1.sh
+			qsub -N "p1_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -298,7 +313,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			./run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
 		fi
 		N=$((N+1))
 	done
@@ -307,7 +322,11 @@ fi
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	find "$CUFFOUTPUT"/* -type d -exec echo -ne "{}/abundances.cxb\t" \; -exec sh -c "echo {} | sed 's/.*\///'" \; >> $CUFFOUTPUT/sample_sheet.txt
-	cuffnorm --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
+	if [[ $QSUB -ge 1 ]] ; then
+		qsub -N "pcuff_${TYPE}_cuffnorm" -V -v ANNOTATION=$ANNOTATION,CUFFOUTPUT=$CUFFOUTPUT $SCRIPTS_DIR/run_cuffnorm.sh
+	else
+		cuffnorm --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
+	fi;
 fi
 
 rm -r preliminary
@@ -341,7 +360,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p2_${TYPE}_$N" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}" run_tcr_method2_sc_part2.sh
+			qsub -N "p2_${TYPE}_$N" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}" $SCRIPTS_DIR/run_tcr_method2_sc_part2.sh
 		fi
 		N=$((N+1))
 	done
@@ -360,7 +379,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			./run_tcr_method2_sc_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
 			N=$((N+1))
 		fi
 	done
@@ -398,7 +417,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -417,7 +436,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			./run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
 			N=$((N+1))
 		fi
 	done
@@ -473,6 +492,9 @@ if [ "$RUNR" -ge 1 ]; then
 		index=$((index+1))
 	done
 fi
+
+# wait for cuffnorm to finish
+waitForProcess cuff $TYPE
 
 # ERROR CORRECTION
 # Requires fasta file of reference (reconstructed) sequences and paired end reads
