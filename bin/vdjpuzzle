@@ -215,8 +215,11 @@ do
 		fi
 		export ANNOTATION
 		# default /short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
+		shift
+		;;
 
 		*)
+
 		if [[ ! -d "$i" ]]; then
 			echo "Invalid SC_RNA_SEQ directory: $i"
 			printHelp
