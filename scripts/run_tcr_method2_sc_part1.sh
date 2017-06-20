@@ -36,6 +36,12 @@ else
 	param9=$9
 fi
 
+# if PATH_PARAM has been passed to the script, then set PATH
+# this is because sometimes PATH gets overwritten on slave nodes, even when using -V
+if [ ! -z ${PATH_PARAM+x} ]; then
+	export PATH=$PATH_PARAM
+fi
+
 CELL_PATH=$param1
 
 Q1="${CELL_PATH}/${param2}1.fastq.gz"
@@ -123,9 +129,17 @@ do
 	sed 's\>\\g' $Q3/overlapping_readsID_1.fa > $Q3/overlapping_readsID3.txt
 	sed 's\>\\g' $Q3/overlapping_readsID_2.fa >> $Q3/overlapping_readsID3.txt
 
-	zcat $Q1 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-	zcat $Q2 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+	# find fastq entries containing overlapping read IDs from either raw or trimmed fastq files
+	# get rid of pesky -- lines which appear for some reason using "^\-\-$"
+	if [ "$param6" -ge 1 ]; then # we are using trimmed reads
+		zcat $PAIR_1 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_2 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+	else
+		zcat $Q1 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q2 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+	fi
 
+	# rebuild the trinity index
 	$trinitypath --left $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq --right $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
 
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa

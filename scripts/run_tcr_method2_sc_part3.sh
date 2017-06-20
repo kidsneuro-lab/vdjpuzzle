@@ -34,6 +34,12 @@ else
 	param8=$8
 fi
 
+# if PATH_PARAM has been passed to the script, then set PATH
+# this is because sometimes PATH gets overwritten on slave nodes, even when using -V
+if [ ! -z ${PATH_PARAM+x} ]; then
+	export PATH=$PATH_PARAM
+fi
+
 CELL_PATH=$param1
 
 #export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
