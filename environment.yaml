@@ -22,6 +22,7 @@ dependencies:
 - perl-threaded=5.22.0=10
 - samtools=1.4.1=0
 - slclust=02022010=1
+- subread=1.5.2=0
 - tbb=4.4_20150728=0
 - tophat=2.1.1=py27_0
 - trimmomatic=0.36=3
