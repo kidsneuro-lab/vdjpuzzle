@@ -21,16 +21,16 @@ SHARE_DIR=$BIN_DIR/../share
 function printHelp {
 	>&2 echo "VDJ Puzzle v1.0"
 	>&2 echo "Usage: ./VDJPuzzle.sh directory_name [option]"
-	>&2 echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
-	>&2 echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
-	>&2 echo "--CPU=n\truns with n processes"
-	>&2 echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
-	>&2 echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
-	>&2 echo "--only-statistics\texecutes only summary statistics script"
-	>&2 echo "--no-statistics\tdo not execute summary statistics script"
-	>&2 echo "--transcriptomic\tBLAHHH"
-	>&2 echo "--trim\tTrims reads using Trimmomatic"
-	>&2 echo "--counts\tBLAHHH"
+	>&2 echo -e "--qsub\texecutes on the cluster (overrides --CPU flag)"
+	>&2 echo -e "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
+	>&2 echo -e "--CPU=n\truns with n processes"
+	>&2 echo -e "--THR=n\truns bowtie and tophat with n threads (default 8)"
+	>&2 echo -e "--species=(human|mouse)\tspecified human (default) or mouse organism"
+	>&2 echo -e "--only-statistics\texecutes only summary statistics script"
+	>&2 echo -e "--no-statistics\tdo not execute summary statistics script"
+	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
+	>&2 echo -e "--trim\tTrims reads using Trimmomatic"
+	>&2 echo -e "--counts\tEnable featureCounts gene quantification measurements"
 }
 
 function testArg {
