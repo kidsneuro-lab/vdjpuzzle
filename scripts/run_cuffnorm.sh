@@ -15,5 +15,10 @@
 #ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/human/Genes/genes.gtf
 #CUFFOUTPUT=`pwd`/CuffQuant
 
-cuffnorm --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
+# if PATH_PARAM has been passed to the script, then set PATH
+# this is because sometimes PATH gets overwritten on slave nodes, even when using -V
+if [ ! -z ${PATH_PARAM+x} ]; then
+	export PATH=$PATH_PARAM
+fi
 
+cuffnorm -p 8 --use-sample-sheet -o CuffNorm $ANNOTATION $CUFFOUTPUT/sample_sheet.txt
