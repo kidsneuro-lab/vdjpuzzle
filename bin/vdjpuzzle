@@ -196,7 +196,7 @@ do
 
 		--bowtie-index=*)
 		BOWTIE_INDEX="${i#*=}"
-		if [[ ! -f "${BOWTIE_INDEX}.1.bt2" | -z ${BOWTIE_INDEX+x} ]]; then
+		if [[ ! -f "${BOWTIE_INDEX}.1.bt2" || -z ${BOWTIE_INDEX+x} ]]; then
 			>&2 echo "Error: could not find index at ${BOWTIE_INDEX}.1.bt2"
 			printHelp
 			exit 1
@@ -208,7 +208,7 @@ do
 
     --gtf=*)
 		ANNOTATION="${i#*=}"
-		if [[ ! -f "${ANNOTATION}" | -z ${ANNOTATION+x} ]]; then
+		if [[ ! -f "${ANNOTATION}" || -z ${ANNOTATION+x} ]]; then
 			>&2 echo "Error: could not find GTF annotation at ${ANNOTATION}."
 			printHelp
 			exit 1
