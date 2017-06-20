@@ -16,19 +16,21 @@ BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SCRIPTS_DIR=$BIN_DIR/../scripts
 SHARE_DIR=$BIN_DIR/../share
 
+>&2 echo "Running VDJPuzzle executable from directory: $BIN_DIR"
+
 function printHelp {
-	echo "VDJ Puzzle v1.0"
-	echo "Usage: ./VDJPuzzle.sh directory_name [option]"
-	echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
-	echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
-	echo "--CPU=n\truns with n processes"
-	echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
-	echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
-	echo "--only-statistics\texecutes only summary statistics script"
-	echo "--no-statistics\tdo not execute summary statistics script"
-	echo "--transcriptomic\tBLAHHH"
-	echo "--trim\tTrims reads using Trimmomatic"
-	echo "--counts\tBLAHHH"
+	>&2 echo "VDJ Puzzle v1.0"
+	>&2 echo "Usage: ./VDJPuzzle.sh directory_name [option]"
+	>&2 echo "--qsub\texecutes on the cluster (overrides --CPU flag)"
+	>&2 echo "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
+	>&2 echo "--CPU=n\truns with n processes"
+	>&2 echo "--THR=n\truns bowtie and tophat with n threads (default 8)"
+	>&2 echo "--species=(human|mouse)\tspecified human (default) or mouse organism"
+	>&2 echo "--only-statistics\texecutes only summary statistics script"
+	>&2 echo "--no-statistics\tdo not execute summary statistics script"
+	>&2 echo "--transcriptomic\tBLAHHH"
+	>&2 echo "--trim\tTrims reads using Trimmomatic"
+	>&2 echo "--counts\tBLAHHH"
 }
 
 function testArg {
