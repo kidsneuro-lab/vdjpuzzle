@@ -12,6 +12,8 @@
 
 #PBS -l wd
 
+set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
 if [[ -n "$P3" ]]; then
@@ -63,14 +65,14 @@ CHAIN_PREFIX_ARRAY=($param8)
 # module load cufflinks/2.2.1
 # module load bedtools/2.26.0
 
-rm $Q3/overlapping_reads*
+rm -f $Q3/overlapping_reads*
 for prefix in "${CHAIN_PREFIX_ARRAY[@]}"
 do
-	rm $Q3/out1${prefix}.fastq
-	rm $Q3/out2${prefix}.fastq
+	rm -f $Q3/out1${prefix}.fastq
+	rm -f $Q3/out2${prefix}.fastq
 done
-mkdir $Q3
-mkdir $Q3/out
+mkdir -p $Q3
+mkdir -p $Q3/out
 
 echo "P1: $param1
 P2: $param2
@@ -143,8 +145,8 @@ do
 	$trinitypath --left $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq --right $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
 
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa
-	rm -r $Q3/trinity_out_dir
-	rm $Q3/overlapping_reads*
+	rm -rf $Q3/trinity_out_dir
+	rm -f $Q3/overlapping_reads*
 
 	index=$((index+1))
 done
@@ -153,12 +155,12 @@ done
 # module load java/jdk1.8.0_60
 # module load blast/2.2.28+
 
-mkdir $param4/summary
+mkdir -p $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	$MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
 
-rm $CELL_PATH/merged*
+rm -f $CELL_PATH/merged*
 gzip $CELL_PATH/*.fastq

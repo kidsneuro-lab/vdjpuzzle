@@ -22,6 +22,8 @@
 # module load java/jdk1.8.0_60
 # module load blast/2.2.28+
 
+set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
 if [[ -n "$P3" ]]; then
@@ -39,6 +41,13 @@ else
 	param5=$5
 	param6=$6
 fi
+
+# if PATH_PARAM has been passed to the script, then set PATH
+# this is because sometimes PATH gets overwritten on slave nodes, even when using -V
+if [ ! -z ${PATH_PARAM+x} ]; then
+	export PATH=$PATH_PARAM
+fi
+
 
 CELL_PATH=$param1
 CHAIN_ARRAY=($param5)

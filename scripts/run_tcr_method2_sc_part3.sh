@@ -12,6 +12,8 @@
 
 #PBS -l wd
 
+set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
 if [[ -n "$P3" ]]; then
@@ -75,7 +77,7 @@ if [ "$param5" -ge 1 ]; then
 	Q2="${CELL_PATH}/PAIRED_${param2}2.fastq.gz"
 fi
 
-module load bowtie2/2.1.0
+#module load bowtie2/2.1.0
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
@@ -89,15 +91,14 @@ for chain in "${CHAIN_ARRAY[@]}"
 do
 	$trinitypath --left $Q3/reads_TCRB_1.fastq --right $Q3/reads_TCRB_2.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa
-	rm -r $Q3/trinity_out_dir
+	rm -rf $Q3/trinity_out_dir
 done
 
 # module unload java/jdk1.7.0_25
 # module load java/jdk1.8.0_60
 # module load blast/2.2.28+
 
-mkdir $param4/summary
-
+mkdir -p $param4/summary
 echo "Running MIGMAP"
 for chain in "${CHAIN_ARRAY[@]}"
 do

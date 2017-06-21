@@ -15,6 +15,8 @@
 #ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/human/Genes/genes.gtf
 #CUFFOUTPUT=`pwd`/CuffQuant
 
+set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+
 # if PATH_PARAM has been passed to the script, then set PATH
 # this is because sometimes PATH gets overwritten on slave nodes, even when using -V
 if [ ! -z ${PATH_PARAM+x} ]; then

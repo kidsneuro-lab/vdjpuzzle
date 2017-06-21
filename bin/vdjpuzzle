@@ -2,6 +2,8 @@
 
 # THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
+set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+
 # get the directory of the current script
 # from https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 SOURCE="${BASH_SOURCE[0]}"
@@ -17,6 +19,7 @@ SCRIPTS_DIR=$BIN_DIR/../scripts
 SHARE_DIR=$BIN_DIR/../share
 
 >&2 echo "Running VDJPuzzle executable from directory: $BIN_DIR"
+>&2 echo "Running on date: " `date`
 
 function printHelp {
 	>&2 echo "VDJ Puzzle v1.0"
@@ -113,7 +116,6 @@ QSUB=0
 TRANSCRIPTOMIC=0
 TYPE='t'
 
-echo `date`
 
 # make log directory
 mkdir -p log
@@ -233,7 +235,7 @@ do
 done
 
 if [[ -z "$RNADIR" ]]; then
-	echo "No inputted cell directory!"
+	echo "VDJPuzzle requires a positional argument, directory_name."
 	printHelp
 	exit 1
 fi
@@ -337,12 +339,15 @@ if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	fi;
 fi
 
-rm -r preliminary
+if [ -d preliminary]; then
+	rm -rf preliminary
+fi;
+
 mkdir preliminary
 mv VDJ_p1* preliminary/
 
 if [ "$COUNTS" -ge 1 ]; then
-	mkdir $COUNTOUTPUT
+	mkdir -p $COUNTOUTPUT
 	find preliminary -name 'accepted_hits.bam' -type f > $COUNTOUTPUT/bam_files.txt
 	mapfile -t <$COUNTOUTPUT/bam_files.txt
 	$featureCounts --primary -a $ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
@@ -355,7 +360,9 @@ echo "Preliminary TCR repertoire reconstructed."
 #PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
 for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
 do
-	rm all_sequences_${chain_prefix}.fa
+	if [[ -f all_sequences_${chain_prefix} ]]; then
+		rm -f all_sequences_${chain_prefix}.fa
+	fi;
 done
 
 if [[ $QSUB -ge 1 ]] ; then
@@ -407,10 +414,10 @@ do
 	index=$((index+1))
 done
 
-mkdir assembledTCR_genome
+mkdir -p assembledTCR_genome
 mv *.bt2 assembledTCR_genome/
 
-mkdir summary2
+mkdir -p summary2
 mv summary/* summary2/
 
 
