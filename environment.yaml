@@ -1,6 +1,7 @@
 name: vdjpuzzle
 channels:
 - bioconda
+- conda-forge
 - defaults
 dependencies:
 - bcftools=1.4.1=0
@@ -12,7 +13,7 @@ dependencies:
 - collectl=4.0.4=1
 - cufflinks=2.2.1=py27_1
 - fastool=0.1.4=1
-- igblast=1.5.0=2
+- igblast=1.7.0=pl5.22.0_0
 - java-jdk=8.0.92=1
 - jellyfish=2.2.6=0
 - migmap=1.0.2=0
@@ -27,6 +28,7 @@ dependencies:
 - tophat=2.1.1=py27_0
 - trimmomatic=0.36=3
 - trinity=2.4.0=5
+- perl=5.22.0.1=0
 - bzip2=1.0.6=3
 - curl=7.52.1=0
 - libgcc=5.2.0=0
