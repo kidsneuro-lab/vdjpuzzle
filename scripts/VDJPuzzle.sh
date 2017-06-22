@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
 function printHelp {
