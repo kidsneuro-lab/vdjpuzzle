@@ -339,7 +339,7 @@ if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	fi;
 fi
 
-if [ -d preliminary]; then
+if [ -d preliminary ]; then
 	rm -rf preliminary
 fi;
 
