@@ -288,7 +288,7 @@ RNADIR="$PWD"
 cd $CURDIR
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
-	mkdir  $CUFFOUTPUT
+	mkdir -p $CUFFOUTPUT
 	echo "Transcriptomic quantification"
 	echo -e "sample_name\tgroup" > $CUFFOUTPUT/sample_sheet.txt
 fi
@@ -343,7 +343,7 @@ if [ -d preliminary]; then
 	rm -rf preliminary
 fi;
 
-mkdir preliminary
+mkdir -p preliminary
 mv VDJ_p1* preliminary/
 
 if [ "$COUNTS" -ge 1 ]; then
@@ -459,7 +459,7 @@ else
 fi
 
 rm -r TCRsequences
-mkdir TCRsequences
+mkdir -p TCRsequences
 mv VDJ_p3* TCRsequences/
 
 # UPDATE SUMMARY FOLDER WITH LATEST

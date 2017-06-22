@@ -69,8 +69,8 @@ do
 	rm $Q3/out1${prefix}.fastq
 	rm $Q3/out2${prefix}.fastq
 done
-mkdir $Q3
-mkdir $Q3/out
+mkdir -p $Q3
+mkdir -p $Q3/out
 
 if [ "$param5" -ge 1 ]; then
 	Q1="${CELL_PATH}/PAIRED_${param2}1.fastq.gz"
