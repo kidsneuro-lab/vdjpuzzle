@@ -301,7 +301,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f | wc -l || echo "0")
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
@@ -317,7 +317,7 @@ else
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f | wc -l || echo "0")
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			if (( $N % $PARALLEL == 0 )) ; then
@@ -372,7 +372,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f || true | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			qsub -N "p2_${TYPE}_$N" -e "log/p2_${TYPE}_$N.err" -o "log/p2_${TYPE}_$N.out" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part2.sh
@@ -388,7 +388,7 @@ else
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f || true | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			if (( $N % $PARALLEL == 0 )) ; then
@@ -429,7 +429,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f || true | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
@@ -445,7 +445,7 @@ else
 		echo $d
 		di=${d%%/};
 		echo $di
-		nfiles=$(find $di/*fastq* -type f | wc -l)
+		nfiles=$(find $di/*fastq* -type f || true | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
 			if (( $N % $PARALLEL == 0 )) ; then
