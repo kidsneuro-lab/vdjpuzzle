@@ -46,8 +46,8 @@ fi
 
 CELL_PATH=$param1
 
-FNAME1=`find ${CELL_PATH} -name "*1.fastq.gz" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
-FNAME2=`find ${CELL_PATH} -name "*2.fastq.gz" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
+FNAME1=`find -L ${CELL_PATH} -name "*1.fastq.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME2=`find -L ${CELL_PATH} -name "*2.fastq.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
 Q1=${CELL_PATH}/$FNAME1
 Q2=${CELL_PATH}/$FNAME2
 Q3=$param4/VDJ_p1_$param2
