@@ -46,8 +46,10 @@ fi
 
 CELL_PATH=$param1
 
-Q1="${CELL_PATH}/${param2}1.fastq.gz"
-Q2="${CELL_PATH}/${param2}2.fastq.gz"
+FNAME1=`find ${CELL_PATH} -name "*1.fastq.gz" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME2=`find ${CELL_PATH} -name "*2.fastq.gz" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
+Q1=${CELL_PATH}/$FNAME1
+Q2=${CELL_PATH}/$FNAME2
 Q3=$param4/VDJ_p1_$param2
 Q4=$param4
 CHAIN_ARRAY=($param7)
@@ -87,10 +89,10 @@ P9: $param9"
 echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
 if [ "$param6" -ge 1 ]; then
-	PAIR_1="${CELL_PATH}/PAIRED_${param2}1.fastq.gz"
-	PAIR_2="${CELL_PATH}/PAIRED_${param2}2.fastq.gz"
-	UNPAIR_1="${CELL_PATH}/UNPAIRED_${param2}1.fastq.gz"
-	UNPAIR_2="${CELL_PATH}/UNPAIRED_${param2}2.fastq.gz"
+	PAIR_1="${CELL_PATH}/PAIRED_${FNAME1}"
+	PAIR_2="${CELL_PATH}/PAIRED_${FNAME2}"
+	UNPAIR_1="${CELL_PATH}/UNPAIRED_${FNAME1}"
+	UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
 	$TRIMMOMATIC PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
 	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1

@@ -47,8 +47,10 @@ CELL_PATH=$param1
 #export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
 
 
-Q1="${CELL_PATH}/${param2}1.fastq.gz"
-Q2="${CELL_PATH}/${param2}2.fastq.gz"
+FNAME1=`find ${CELL_PATH} -name "*1.fastq.gz" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME2=`find ${CELL_PATH} -name "*2.fastq.gz" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
+Q1=${CELL_PATH}/$FNAME1
+Q2=${CELL_PATH}/$FNAME2
 Q3=$param4/VDJ_p3_$param2
 Q4=$param4
 CHAIN_ARRAY=($param6)
@@ -73,8 +75,8 @@ mkdir -p $Q3
 mkdir -p $Q3/out
 
 if [ "$param5" -ge 1 ]; then
-	Q1="${CELL_PATH}/PAIRED_${param2}1.fastq.gz"
-	Q2="${CELL_PATH}/PAIRED_${param2}2.fastq.gz"
+	Q1="${CELL_PATH}/PAIRED_${FNAME1}"
+	Q2="${CELL_PATH}/PAIRED_${FNAME2}"
 fi
 
 #module load bowtie2/2.1.0
