@@ -48,7 +48,7 @@ function testArg {
 function waitForProcess {
 	sleep_time=120
 	status=`qstat -u $USER | grep "p${1}_${2}" || true`
-	while [ ! -z ${status+x} ] # while $status is not empty
+	while [ -n "${status}" ] # while $status is not empty
 	do
 		sleep $sleep_time
 		status=`qstat -u $USER | grep "p${1}_${2}" || true`
