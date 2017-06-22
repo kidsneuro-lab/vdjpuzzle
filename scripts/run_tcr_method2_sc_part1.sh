@@ -2,11 +2,15 @@
 #This script execut the RNA-Seq alingnamet pipeline sequentially, multithreading is implemented within the scripts (Trimmomatic, tophat and cufflinks)
 #This script should be executed in parallel on different cells indicating the right directory ($1)
 
-#PBS -W group_list=va1
+#PBS -P va1
 
-#PBS -q workq
+#PBS -q normal
 
-#PBS -l select=1:ncpus=1:mem=20G,walltime=72:00:00
+#PBS -l walltime=48:00:00
+#PBS -l ncpus=8
+#PBS -l mem=20G
+
+#PBS -l wd
 
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
@@ -40,6 +44,18 @@ Q3=$param4/VDJ_p1_$param2
 Q4=$param4
 CHAIN_ARRAY=($param7)
 CHAIN_PREFIX_ARRAY=($param8)
+
+export PATH=/apps/bowtie2/2.1.0/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
+export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+module unload samtools/0.1.18
+module load tophat/2.0.7
+module unload samtools/1.3.1
+module load samtools/0.1.18
+module load bowtie2/2.1.0
+module load cufflinks/2.2.1
+module load bedtools/2.26.0 
 
 rm $Q3/overlapping_reads*
 for prefix in "${CHAIN_PREFIX_ARRAY[@]}"
@@ -81,17 +97,20 @@ if [ "$param5" -ge 1 ]; then
 	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_run2/accepted_hits.bam
 fi
 
+module unload samtools/0.1.18
+module load samtools/1.2
+
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	if [[ "param5" -ge 1 ]]; then
-		$BEDTOOLS -wa -abam $Q3/out/tophat_run1/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run1/overlapping_reads.bam 
-		$BEDTOOLS -wa -abam $Q3/out/tophat_run2/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run2/overlapping_reads.bam 
-		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/overlapping_reads.bam
-		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/overlapping_reads.bam
+		intersectBed -wa -abam $Q3/out/tophat_run1/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run1/overlapping_reads.bam 
+		intersectBed -wa -abam $Q3/out/tophat_run2/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run2/overlapping_reads.bam 
+		samtools view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/overlapping_reads.bam
+		samtools view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/overlapping_reads.bam
 	else
-		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/accepted_hits.bam
-		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/accepted_hits.bam
+		samtools view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/accepted_hits.bam
+		samtools view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/accepted_hits.bam
 	fi
 
 	cat $Q3/out/tophat_run1/overlapping_reads.sam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads_1.fq
@@ -116,11 +135,15 @@ do
 	index=$((index+1))
 done
 
+module unload java/jdk1.7.0_25
+module load java/jdk1.8.0_60
+module load blast/2.2.28+
+
 mkdir $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	$JAVA18 -jar $MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	java -jar $MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
 
 rm $CELL_PATH/merged*

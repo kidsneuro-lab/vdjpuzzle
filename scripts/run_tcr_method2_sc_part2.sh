@@ -3,11 +3,24 @@
 #This script should be executed in parallel on different cells indicating the right directory ($1)
 
 
-#PBS -W group_list=va1
+#PBS -P va1
 
-#PBS -q workq
+#PBS -q normal
 
-#PBS -l select=1:ncpus=1:mem=20G,walltime=24:00:00
+#PBS -l walltime=24:00:00
+#PBS -l ncpus=1
+#PBS -l mem=20G
+
+#PBS -l wd
+
+module load samtools/0.1.18
+export PATH=/apps/bowtie2/2.2.5/:$PATH
+export PATH=/apps/bowtie/1.1.1/:$PATH
+export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+module unload java/jdk1.7.0_25
+module load java/jdk1.8.0_60
+module load blast/2.2.28+
 
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
@@ -43,7 +56,7 @@ P6: $param6"
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	$JAVA18 -jar $MIGMAP -S $param2 -R ${chain//C} --by-read $CELL_PATH/${chain}.fa $CELL_PATH/${chain}.out
+	java -jar $MIGMAP -S $param2 -R ${chain//C} --by-read $CELL_PATH/${chain}.fa $CELL_PATH/${chain}.out
 	tail -n+2 $CELL_PATH/${chain}.out > $CELL_PATH/${chain}.tmp
 	cut -f1 $CELL_PATH/${chain}.tmp -d " " > $CELL_PATH/reads_${CHAIN_PREFIX_ARRAY[$index]}.txt
 	cut -c 2- $CELL_PATH/reads_${CHAIN_PREFIX_ARRAY[$index]}.txt | xargs -n 1 samtools faidx $CELL_PATH/${chain}.fa > $param3/matching_reads_${CHAIN_PREFIX_ARRAY[$index]}_$param4.fa

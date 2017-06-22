@@ -1,6 +1,6 @@
 #!/bin/bash
-#Source code implemented by Simone Rizzetto (UNSW, Australia), for enquiries and documentation please refer to https://github.com/Simo-88/VDJPuzzle
-#LATEST VERSION
+
+# THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
 function printHelp {
 	echo "VDJ Puzzle v1.0"
@@ -36,24 +36,36 @@ function waitForProcess {
 	done
 }
 
+module unload samtools/0.1.18
+module load tophat/2.0.7
+module unload samtools/1.3.1
+module load samtools/0.1.18
+module load bowtie2/2.1.0
+
+module load cufflinks/2.2.1
+module load bedtools/2.26.0 
+module load blast/2.2.28+
+
 #CONFIGURE SCRIPT PATHS
-export PATH=~/binf3111/VDJPuzzle/Tools/bowtie2/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/bowtie/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/samtools/bin/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/java1.7/bin/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/Blast/usr/bin/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/igblastwrapper_linux64/bin/:$PATH
-export PATH=~/binf3111/VDJPuzzle/Tools/cufflinks-2.2.1.Linux_x86_64/:$PATH
-export MIGMAP=~/binf3111/VDJPuzzle/Tools/migmap-0.9.7/migmap-0.9.7.jar
-export trinitypath=~/binf3111/VDJPuzzle/Tools/trinityrnaseq-2.0.6/Trinity
-export TOPHAT=~/binf3111/VDJPuzzle/Tools/tophat/2.1.0/tophat2
-export BOWTIE=~/binf3111/VDJPuzzle/Tools/bowtie2/bowtie2
-export BOWTIEBUILD=~/binf3111/VDJPuzzle/Tools/bowtie2/bowtie2-build
-export SAMTOOLS=~/binf3111/VDJPuzzle/Tools/samtools/bin/samtools
-export BEDTOOLS=~/binf3111/VDJPuzzle/Tools/bedtools/bin/intersectBed
-export JAVA18=~/binf3111/VDJPuzzle/Tools/java1.8/bin/java
-export TRIMMOMATIC=~/binf3111/VDJPuzzle/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
-export featureCounts=~/binf3111/VDJPuzzle/Tools/subread-1.5.1-Linux-x86_64/bin/featureCounts
+export PATH=/apps/bowtie2/2.1.0/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
+export PATH=/apps/samtools/0.1.18/bin/:$PATH
+export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/Blast/usr/bin/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
+export PATH=/apps/cufflinks/2.2.1/bin/:$PATH
+export PATH=/short/va1/fzl561/scRNAseq/Tools/cufflinks-2.2.1.Linux_x86_64/:$PATH
+export MIGMAP=/short/va1/dk0741/tools/migmap-0.9.7/migmap-0.9.7.jar
+export trinitypath=/short/va1/fzl561/scRNAseq/Tools/trinityrnaseq-2.0.6/Trinity
+export TOPHAT=/apps/tophat/2.0.7/tophat2
+export BOWTIE=/apps/bowtie2/2.1.0/bowtie2
+export BOWTIEBUILD=/apps/bowtie2/2.1.0/bowtie2-build
+export SAMTOOLS=/apps/samtools/0.1.18/bin/samtools
+export BEDTOOLS=/apps/bedtools/2.26.0/bin/intersectBed
+export JAVA18=/apps/java/jdk1.8.0_60/bin/java #Java18 is included in the package so don't edit this path
+export TRIMMOMATIC=/short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
+export featureCounts=/short/va1/dk0741/tools/featureCounts/featureCounts
+#/short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
 
 ### TRIMMING PARAMETERS ###
 export ADAPTERS=$(echo $TRIMMOMATIC | egrep -o ".*\/")adapters/NexteraPE-PE.fa
@@ -189,12 +201,12 @@ if [[ $TRANSCRIPTOMIC -ge 1 ]]; then
 	cell_type=''
 fi
 
-export ENSEMBL=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
-export ANNOTATION=~/binf3111/VDJPuzzle/Tools/refGenome/$ORGANISM/Genes/genes.gtf
+export ENSEMBL=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
+export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	export $chain=~/binf3111/VDJPuzzle/Tools/refGenome/BED_files/${chain//C}_$ORGANISM.bed
+	export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
 export CUFFOUTPUT=$PWD/CuffQuant
@@ -435,123 +447,123 @@ fi
 # Requires fasta file of reference (reconstructed) sequences and paired end reads
 # Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
 
-export PATH=/apps/bwa/0.7.12/:$PATH
-export PATH=/home/fzl561/scRNAseq/Tools/bcftools-1.3.1/bin/:$PATH
+# export PATH=/apps/bwa/0.7.12/:$PATH
+# export PATH=/home/fzl561/scRNAseq/Tools/bcftools-1.3.1/bin/:$PATH
 
-for chain in "${CHAIN_ARRAY[@]}"
-do
-	R1="reads_${chain}_1.fastq"
-	R2="reads_${chain}_2.fastq"
+# for chain in "${CHAIN_ARRAY[@]}"
+# do
+# 	R1="reads_${chain}_1.fastq"
+# 	R2="reads_${chain}_2.fastq"
 
-	# Set up fasta filename containing all reconstructed sequences
-	if [[ $TYPE == 't' ]] ; then
-		# tcr_[ab].fa
-		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
-	else
-		# ig_[hkl].fa
-		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
-	fi
+# 	# Set up fasta filename containing all reconstructed sequences
+# 	if [[ $TYPE == 't' ]] ; then
+# 		# tcr_[ab].fa
+# 		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
+# 	else
+# 		# ig_[hkl].fa
+# 		ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
+# 	fi
 
-	# create directory for storing results
-	OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
+# 	# create directory for storing results
+# 	OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
 
-	echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
-	exit
+# 	echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
+# 	exit
 
-	if [[ -e $OUTPUT ]]
-	then
-		echo "Output directory already exits, exiting ..."
-		exit 1
-	fi
-	mkdir $OUTPUT
+# 	if [[ -e $OUTPUT ]]
+# 	then
+# 		echo "Output directory already exits, exiting ..."
+# 		exit 1
+# 	fi
+# 	mkdir $OUTPUT
 
-	for cell in $CURDIR/TCRsequences/*
-	do 
-		# read original data
-		ALL_FASTA=$cell$ORIG_REF
-		READS_1=$cell$R1
-		READS_2=$cell$R2
+# 	for cell in $CURDIR/TCRsequences/*
+# 	do 
+# 		# read original data
+# 		ALL_FASTA=$cell$ORIG_REF
+# 		READS_1=$cell$R1
+# 		READS_2=$cell$R2
 		
-		# skip the case/cell where a directory does not have required files
-		if [ -e $ALL_FASTA -a -e $READS_1 -a -e $READS_2 ]
-		then
-			echo "[current] Reference file and reads found."
-			sleep 2
-		else
-			echo "[current] Reference file and reads were not found ... moving to next cell."
-			continue
-		fi
+# 		# skip the case/cell where a directory does not have required files
+# 		if [ -e $ALL_FASTA -a -e $READS_1 -a -e $READS_2 ]
+# 		then
+# 			echo "[current] Reference file and reads found."
+# 			sleep 2
+# 		else
+# 			echo "[current] Reference file and reads were not found ... moving to next cell."
+# 			continue
+# 		fi
 		
-		# create subdirectory for each cell analysed
-		mkdir $OUTPUT/$(basename $cell)
-		cd $OUTPUT/$(basename $cell)
+# 		# create subdirectory for each cell analysed
+# 		mkdir $OUTPUT/$(basename $cell)
+# 		cd $OUTPUT/$(basename $cell)
 		
-		# construct path for final output file
-		CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
-		rm -vf accepted_seq_names.txt
+# 		# construct path for final output file
+# 		CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
+# 		rm -vf accepted_seq_names.txt
 
-		# orange.intersect
-		if [[ $(hostname) == 'orange' ]] ; then
-			$JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-		else
-			# sudo required for write permission on cluster
-			sudo $JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-		fi
+# 		# orange.intersect
+# 		if [[ $(hostname) == 'orange' ]] ; then
+# 			$JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+# 		else
+# 			# sudo required for write permission on cluster
+# 			sudo $JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+# 		fi
 
-		# first tab delimited entry from migmap is the sequence name
-		# create a file with names of identified sequences 
-		cut -f1 | while read x ; do
-				if [[ "$x" == ">"* ]] ; then 
-					echo "$x" >> accepted_seq_names.txt; 
-				fi;
-			done 
+# 		# first tab delimited entry from migmap is the sequence name
+# 		# create a file with names of identified sequences 
+# 		cut -f1 | while read x ; do
+# 				if [[ "$x" == ">"* ]] ; then 
+# 					echo "$x" >> accepted_seq_names.txt; 
+# 				fi;
+# 			done 
 
-		rm -vf $CORR_SEQ
+# 		rm -vf $CORR_SEQ
 			
-		# go through identified sequences and use as reference for alignment
-		while read seq_name; do
-			# create a fasta reference file with a single sequence, index it as required
-			python $CURDIR/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
-			samtools faidx reference.fasta
-			bwa index reference.fasta
+# 		# go through identified sequences and use as reference for alignment
+# 		while read seq_name; do
+# 			# create a fasta reference file with a single sequence, index it as required
+# 			python $CURDIR/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
+# 			samtools faidx reference.fasta
+# 			bwa index reference.fasta
 			
-			# samtools v1.3.1
-			bwa mem reference.fasta $READS_1 $READS_2 | samtools view -b | samtools sort -o alignment.bam
+# 			# samtools v1.3.1
+# 			bwa mem reference.fasta $READS_1 $READS_2 | samtools view -b | samtools sort -o alignment.bam
 			
-			samtools index alignment.bam
-			echo "[current] samtools index finished"
+# 			samtools index alignment.bam
+# 			echo "[current] samtools index finished"
 			
-			samtools mpileup -uf reference.fasta alignment.bam | 
+# 			samtools mpileup -uf reference.fasta alignment.bam | 
 				
-			if [[ $(hostname) == 'orange' ]] ; then
-				bcftools call -c | python $CURDIR/mpileup2cons.py reference.fasta
-			else 
-				# cluster 21
-				bcftools view -cg - | python $CURDIR/mpileup2cons.py reference.fasta
-			fi
+# 			if [[ $(hostname) == 'orange' ]] ; then
+# 				bcftools call -c | python $CURDIR/mpileup2cons.py reference.fasta
+# 			else 
+# 				# cluster 21
+# 				bcftools view -cg - | python $CURDIR/mpileup2cons.py reference.fasta
+# 			fi
 			
-			# http://samtools.sourceforge.net/mpileup.shtml
-			# alternative but produces truncated consensus and ambiguous bases
-			# use vcfutils, skip first line which is the sequence ID, convert to a single line, stop after the + character (now have the consensus sequence)
-			# samtools mpileup -uf reference.fasta alignment.bam | bcftools view -cg - |
-				# vcfutils.pl vcf2fq | tail -n +2 | tr -d '\n' | cut -f1 -d +
+# 			# http://samtools.sourceforge.net/mpileup.shtml
+# 			# alternative but produces truncated consensus and ambiguous bases
+# 			# use vcfutils, skip first line which is the sequence ID, convert to a single line, stop after the + character (now have the consensus sequence)
+# 			# samtools mpileup -uf reference.fasta alignment.bam | bcftools view -cg - |
+# 				# vcfutils.pl vcf2fq | tail -n +2 | tr -d '\n' | cut -f1 -d +
 			
-			echo "[current] writing sequence to file ..."
-			cat new_reference.fasta >> $CORR_SEQ
-			echo -e "[current] Output located at:\n"$CORR_SEQ
+# 			echo "[current] writing sequence to file ..."
+# 			cat new_reference.fasta >> $CORR_SEQ
+# 			echo -e "[current] Output located at:\n"$CORR_SEQ
 			
-			# Even if we don't remove, they will be overwritten when the enxt sequence is processed.
-			rm -vf new_reference.fasta
-			rm -vf reference.fasta*
-			rm -vf alignment.bam* 
+# 			# Even if we don't remove, they will be overwritten when the enxt sequence is processed.
+# 			rm -vf new_reference.fasta
+# 			rm -vf reference.fasta*
+# 			rm -vf alignment.bam* 
 			
-			echo "[current] sleeping for 10 then moving to next sequence ..." && sleep 10
+# 			echo "[current] sleeping for 10 then moving to next sequence ..." && sleep 10
 			
-		done <accepted_seq_names.txt
-		rm -vf accepted_seq_names.txt
-		echo "[current] sleeping for 10 then moving to next cell ..." && sleep 10
-	done
-done
+# 		done <accepted_seq_names.txt
+# 		rm -vf accepted_seq_names.txt
+# 		echo "[current] sleeping for 10 then moving to next cell ..." && sleep 10
+# 	done
+# done
 
 
 if [[ $TYPE == 't' ]]; then
