@@ -95,16 +95,17 @@ if [ "$param6" -ge 1 ]; then
 	UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
 	$TRIMMOMATIC PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
-	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
+	$TOPHAT -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+#	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
+#	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
 else
-	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $Q1
-	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $Q2
+	$TOPHAT -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
+#	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $Q1
+#	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then
-	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_run1/accepted_hits.bam
-	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_run2/accepted_hits.bam
+	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
 fi
 
 # module unload samtools/0.1.18
@@ -113,34 +114,20 @@ fi
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	if [[ "param5" -ge 1 ]]; then
-		$BEDTOOLS -wa -abam $Q3/out/tophat_run1/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run1/overlapping_reads.bam
-		$BEDTOOLS -wa -abam $Q3/out/tophat_run2/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_run2/overlapping_reads.bam
-		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/overlapping_reads.bam
-		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/overlapping_reads.bam
-	else
-		$SAMTOOLS view -h -o $Q3/out/tophat_run1/overlapping_reads.sam $Q3/out/tophat_run1/accepted_hits.bam
-		$SAMTOOLS view -h -o $Q3/out/tophat_run2/overlapping_reads.sam $Q3/out/tophat_run2/accepted_hits.bam
-	fi
+	$BEDTOOLS -wa -abam $Q3/out/tophat_both/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_both/overlapping_reads.bam
 
-	cat $Q3/out/tophat_run1/overlapping_reads.sam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads_1.fq
-	cat $Q3/out/tophat_run2/overlapping_reads.sam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads_2.fq
-	cat $Q3/overlapping_reads_1.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads_1.fa
-	cat $Q3/overlapping_reads_2.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads_2.fa
-
-	grep ">" $Q3/overlapping_reads_1.fa > $Q3/overlapping_readsID_1.fa
-	grep ">" $Q3/overlapping_reads_2.fa > $Q3/overlapping_readsID_2.fa
-	sed 's\>\\g' $Q3/overlapping_readsID_1.fa > $Q3/overlapping_readsID3.txt
-	sed 's\>\\g' $Q3/overlapping_readsID_2.fa >> $Q3/overlapping_readsID3.txt
+	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
+	cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
+	grep ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
 
 	# find fastq entries containing overlapping read IDs from either raw or trimmed fastq files
 	# get rid of pesky -- lines which appear for some reason using "^\-\-$"
 	if [ "$param6" -ge 1 ]; then # we are using trimmed reads
-		zcat $PAIR_1 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $PAIR_2 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	else
-		zcat $Q1 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $Q2 | grep -f $Q3/overlapping_readsID3.txt -A 3 -F > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	fi
 
 	# rebuild the trinity index
