@@ -2,7 +2,7 @@
 
 # THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
-set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+set -x # echo on, command fails causes script to exit, pipes fail
 
 # get the directory of the current script
 # from https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
@@ -350,7 +350,7 @@ if [ "$COUNTS" -ge 1 ]; then
 	mkdir -p $COUNTOUTPUT
 	find preliminary -name 'accepted_hits.bam' -type f > $COUNTOUTPUT/bam_files.txt
 	mapfile -t <$COUNTOUTPUT/bam_files.txt
-	$featureCounts --primary -a $ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
+	featureCounts --primary -a $ANNOTATION -o "$COUNTOUTPUT/featureCounts.csv" "${MAPFILE[@]}"
 	sed 1d "$COUNTOUTPUT/featureCounts.csv" | cut -f1,7- | sed s/Geneid/id/ > "$COUNTOUTPUT/featureCounts_formatted.csv"
 fi
 
@@ -410,7 +410,7 @@ done
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	$BOWTIEBUILD -f all_sequences_${CHAIN_PREFIX_ARRAY[$index]}.fa $chain
+	bowtie2-build -f all_sequences_${CHAIN_PREFIX_ARRAY[$index]}.fa $chain
 	index=$((index+1))
 done
 

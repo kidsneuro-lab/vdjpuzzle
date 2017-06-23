@@ -12,7 +12,7 @@
 
 #PBS -l wd
 
-set -x -e -o pipefail # echo on, command fails causes script to exit, pipes fail
+set -x # echo on, command fails causes script to exit, pipes fail
 
 #parameters
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
@@ -94,18 +94,18 @@ if [ "$param6" -ge 1 ]; then
 	UNPAIR_1="${CELL_PATH}/UNPAIRED_${FNAME1}"
 	UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
-	$TRIMMOMATIC PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	$TOPHAT -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+	trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
+	#tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
 #	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
 #	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
 else
-	$TOPHAT -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
+	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
 #	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $Q1
 #	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then
-	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
+  echo #cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
 fi
 
 # module unload samtools/0.1.18
@@ -114,9 +114,11 @@ fi
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	$BEDTOOLS -wa -abam $Q3/out/tophat_both/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_both/overlapping_reads.bam
+	echo $chain
+	echo ${!chain}
+	intersectBed -wa -abam $Q3/out/tophat_both/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_both/overlapping_reads.bam
 
-	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -v ^@ | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
+	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -v "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
 	cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
 	grep ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
 
@@ -131,11 +133,11 @@ do
 	fi
 
 	# rebuild the trinity index
-	$trinitypath --left $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq --right $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
+	Trinity --left $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq --right $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
 
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa
 	rm -rf $Q3/trinity_out_dir
-	rm -f $Q3/overlapping_reads*
+#	rm -f $Q3/overlapping_reads*
 
 	index=$((index+1))
 done
@@ -148,7 +150,7 @@ mkdir -p $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	$MIGMAP -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	migmap -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
 
 rm -f $CELL_PATH/merged*
