@@ -47,8 +47,8 @@ CELL_PATH=$param1
 #export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
 
 
-FNAME1=`find -L ${CELL_PATH} -name "*1.fastq.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
-FNAME2=`find -L ${CELL_PATH} -name "*2.fastq.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
+FNAME1=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R1_001|R1|1)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME2=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R2_001|R2|2)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
 Q1=${CELL_PATH}/$FNAME1
 Q2=${CELL_PATH}/$FNAME2
 Q3=$param4/VDJ_p3_$param2
@@ -104,5 +104,5 @@ mkdir -p $param4/summary
 echo "Running MIGMAP"
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	migmap -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
