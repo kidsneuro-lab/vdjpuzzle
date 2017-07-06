@@ -46,8 +46,8 @@ fi
 
 CELL_PATH=$param1
 
-FNAME1=`find -L ${CELL_PATH} -name "*1.fastq.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
-FNAME2=`find -L ${CELL_PATH} -name "*2.fastq.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
+FNAME1=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R1_001|R1|1)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME2=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R2_001|R2|2)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
 Q1=${CELL_PATH}/$FNAME1
 Q2=${CELL_PATH}/$FNAME2
 Q3=$param4/VDJ_p1_$param2
@@ -95,7 +95,7 @@ if [ "$param6" -ge 1 ]; then
 	UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
 	trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	#tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
 #	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
 #	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
 else
@@ -128,8 +128,8 @@ do
 		zcat $PAIR_1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
 		zcat $PAIR_2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	else
-		zcat $Q1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $Q2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	fi
 
 	# rebuild the trinity index
@@ -150,7 +150,7 @@ mkdir -p $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	migmap -S $param3 -R ${chain//C} $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	migmap -S $param3 -R ${chain//C} $Q3/${chain}.fa --data-dir=$CONDA_PREFIX/share/igblast $param4/summary/${chain//C}_$param2
 done
 
 rm -f $CELL_PATH/merged*
