@@ -240,6 +240,18 @@ if [[ -z "$RNADIR" ]]; then
 	exit 1
 fi
 
+if [[ -z "$BOWTIE_INDEX" ]]; then
+	echo "No bowtie index path provided, using default path"
+        BOWTIE_INDEX=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/genome
+        export BOWTIE_INDEX
+fi
+
+if [[ -z "$ANNOTATION" ]]; then
+	echo "No gene annotation file provided, using default path"
+        ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
+        export ANNOTATION
+fi
+
 #CONFIGURE REFERENCE PATHS
 
 if [ "$TYPE" == "t" ]; then
