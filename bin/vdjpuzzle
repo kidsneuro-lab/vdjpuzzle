@@ -552,14 +552,14 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		R1="reads_${chain}_1.fastq"
 		R2="reads_${chain}_2.fastq"
 
-		# Set up fasta filename containing all reconstructed sequences
-		if [[ $TYPE == 't' ]] ; then
-			# tcr_[ab].fa
-			ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
-		else
-			# ig_[hkl].fa
-			ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
-		fi
+		# # Set up fasta filename containing all reconstructed sequences
+		# if [[ $TYPE == 't' ]] ; then
+		# 	# tcr_[ab].fa
+		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
+		# else
+		# 	# ig_[hkl].fa
+		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
+		# fi
 
 		# create directory for storing results
 		OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
@@ -570,16 +570,16 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		if [[ -e $OUTPUT ]]
 		then
 			echo "Output directory already exits, removing it"
-			rm -vr $OUTPUT
+			rm -vrf $OUTPUT
 		fi
 		mkdir $OUTPUT
 
 		for cell in $CURDIR/TCRsequences/*
 		do
 			# read original data
-			ALL_FASTA=$cell$ORIG_REF
-			READS_1=$cell$R1
-			READS_2=$cell$R2
+			ALL_FASTA="$cell/${chain}.fa"
+			READS_1="$cell/$R1"
+			READS_2="$cell/$R2"
 
 			# skip the case/cell where a directory does not have required files
 			if [ ! -e $ALL_FASTA -a ! -e $READS_1 -a ! -e $READS_2 ]
@@ -593,7 +593,7 @@ if [[ $ERRCORR -ge 1 ]] ; then
 			cd $OUTPUT/$(basename $cell)
 
 			# construct path for final output file
-			CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
+			CORR_SEQ=$OUTPUT/$(basename $cell)/new_${chain}.fa
 			rm -vf accepted_seq_names.txt
 
 	# 		# orange.intersect
@@ -612,7 +612,7 @@ if [[ $ERRCORR -ge 1 ]] ; then
 					fi;
 				done
 
-			rm -vr $CORR_SEQ
+			rm -vf "$CORR_SEQ"
 
 			# go through identified sequences and use as reference for alignment
 			while read seq_name; do
