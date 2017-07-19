@@ -308,11 +308,6 @@ cd $RNADIR
 RNADIR="$PWD"
 cd $CURDIR
 
-##########################################################
-####### JUST FOR TESTING THE ERROR CORRECTION CODE #######
-##########################################################
-if [[ 1 -ge 2 ]] ; then
-
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	mkdir -p $CUFFOUTPUT
 	echo "Transcriptomic quantification"
@@ -545,11 +540,6 @@ fi
 
 # wait for cuffnorm to finish
 waitForProcess cuff $TYPE
-
-##########################################################
-####### JUST FOR TESTING THE ERROR CORRECTION CODE #######
-##########################################################
-fi
 
 if [[ $ERRCORR -ge 1 ]] ; then
 	# ERROR CORRECTION
