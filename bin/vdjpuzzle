@@ -280,7 +280,7 @@ fi
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	export $chain=$SHARE_DIR/bed_files/${chain//C}_$ORGANISM.bed
+	export $chain=$SHARE_DIR/bed_files/${chain//C}_${ORGANISM}.bed
 	#export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
@@ -305,6 +305,11 @@ CURDIR="$PWD"
 cd $RNADIR
 RNADIR="$PWD"
 cd $CURDIR
+
+##########################################################
+####### JUST FOR TESTING THE ERROR CORRECTION CODE #######
+##########################################################
+if [[ 1 -ge 2 ]] ; then
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	mkdir -p $CUFFOUTPUT
@@ -539,6 +544,12 @@ fi
 # wait for cuffnorm to finish
 waitForProcess cuff $TYPE
 
+##########################################################
+####### JUST FOR TESTING THE ERROR CORRECTION CODE #######
+##########################################################
+fi
+
+
 if [[ $ERRCORR -ge 1 ]] ; then
 	# ERROR CORRECTION
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
@@ -552,14 +563,14 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		R1="reads_${chain}_1.fastq"
 		R2="reads_${chain}_2.fastq"
 
-		# Set up fasta filename containing all reconstructed sequences
-		if [[ $TYPE == 't' ]] ; then
-			# tcr_[ab].fa
-			ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
-		else
-			# ig_[hkl].fa
-			ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
-		fi
+		# # Set up fasta filename containing all reconstructed sequences
+		# if [[ $TYPE == 't' ]] ; then
+		# 	# tcr_[ab].fa
+		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
+		# else
+		# 	# ig_[hkl].fa
+		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
+		# fi
 
 		# create directory for storing results
 		OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
@@ -577,12 +588,12 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		for cell in $CURDIR/TCRsequences/*
 		do
 			# read original data
-			ALL_FASTA=$cell$ORIG_REF
-			READS_1=$cell$R1
-			READS_2=$cell$R2
+			ALL_FASTA="$cell/${chain}.fa"
+			READS_1="$cell/$R1"
+			READS_2="$cell/$R2"
 
 			# skip the case/cell where a directory does not have required files
-			if [ ! -e $ALL_FASTA -a ! -e $READS_1 -a ! -e $READS_2 ]
+			if [ ! -e $ALL_FASTA -o ! -e $READS_1 -o ! -e $READS_2 ]
 			then
 				echo "Reference file and/or reads were not found ... moving to next cell."
 				continue
@@ -593,26 +604,22 @@ if [[ $ERRCORR -ge 1 ]] ; then
 			cd $OUTPUT/$(basename $cell)
 
 			# construct path for final output file
-			CORR_SEQ=$OUTPUT/$(basename $cell)/new_$ORIG_REF
+			CORR_SEQ=$OUTPUT/$(basename $cell)/new_${chain}.fa
 			rm -vf accepted_seq_names.txt
 
-	# 		# orange.intersect
-	# 		if [[ $(hostname) == 'orange' ]] ; then
-				$JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-	# 		else
-	# 			# sudo required for write permission on cluster
-	# 			sudo $JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
-	# 		fi
-
 			# first tab delimited entry from migmap is the sequence name
-			# create a file with names of identified sequences
-			cut -f1 | while read x ; do
-					if [[ "$x" == ">"* ]] ; then
-						echo "$x" >> accepted_seq_names.txt;
-					fi;
-				done
+                        # create a file with names of identified sequences
+			migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $ALL_FASTA - | cut -f1 | egrep "^>.*" >> accepted_seq_names.txt
 
-			rm -vr $CORR_SEQ
+			## first tab delimited entry from migmap is the sequence name
+			## create a file with names of identified sequences
+			#cut -f1 | while read x ; do
+			#		if [[ "$x" == ">"* ]] ; then
+			#			echo "$x" >> accepted_seq_names.txt;
+			#		fi;
+			#	done
+
+			rm -vrf $CORR_SEQ
 
 			# go through identified sequences and use as reference for alignment
 			while read seq_name; do
