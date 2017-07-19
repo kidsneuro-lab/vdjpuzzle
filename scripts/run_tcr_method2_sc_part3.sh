@@ -25,6 +25,7 @@ if [[ -n "$P3" ]]; then
 	param6=$P6
 	param7=$P7
 	param8=$P8
+	param9=$P9
 else
 	param1=$1
 	param2=$2
@@ -34,6 +35,7 @@ else
 	param6=$6
 	param7=$7
 	param8=$8
+	param9=$9
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
@@ -83,7 +85,7 @@ fi
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	bowtie2 --no-unal -p $param8 -k 1 --np 0 --rdg 1,1 --rfg 1,1 -x $Q4/assembledTCR_genome/${chain} -1 $Q1 -2 $Q2 --al-conc $Q3/reads_${chain}_%.fastq -S $Q4/${chain}.sam
+	bowtie2 --no-unal -p $param8 -k 1 --np 0 --rdg 1,1 --rfg 1,1 -x $Q4/assembled${param9}_genome/${chain} -1 $Q1 -2 $Q2 --al-conc $Q3/reads_${chain}_%.fastq -S $Q4/${chain}.sam
 done
 
 # module unload samtools/0.1.18
@@ -91,7 +93,7 @@ done
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	Trinity --left $Q3/reads_TCRB_1.fastq --right $Q3/reads_TCRB_2.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
+	Trinity --left $Q3/reads_${chain}_1.fastq --right $Q3/reads_${chain}_2.fastq --seqType fq --max_memory 10G --output $Q3/trinity_out_dir
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa
 	rm -rf $Q3/trinity_out_dir
 done

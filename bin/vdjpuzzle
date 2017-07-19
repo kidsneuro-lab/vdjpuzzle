@@ -300,6 +300,8 @@ transcriptomic = $TRANSCRIPTOMIC
 chain_array = ${CHAIN_ARRAY[*]}
 chain_prefix_array = ${CHAIN_PREFIX_ARRAY[*]}"
 
+RECEPTOR_ABBREV="$(echo $TYPE | tr '[:lower:]' '[:upper:]')CR"
+
 #MAKE SURE TO HAVE THE ABSOLUTE PATH WITHOUT / AT THE END
 CURDIR="$PWD"
 cd $RNADIR
@@ -380,7 +382,7 @@ if [ "$COUNTS" -ge 1 ]; then
 	sed 1d "$COUNTOUTPUT/featureCounts.csv" | cut -f1,7- | sed s/Geneid/id/ > "$COUNTOUTPUT/featureCounts_formatted.csv"
 fi
 
-echo "PART 1 COMPLETE: Preliminary TCR repertoire reconstructed."
+echo "PART 1 COMPLETE: Preliminary $RECEPTOR_ABBREV repertoire reconstructed."
 
 echo "STARTING PART 2: Building a new reference geonme based on the preliminary repertoire"
 #PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
@@ -440,8 +442,8 @@ do
 	index=$((index+1))
 done
 
-mkdir -p assembledTCR_genome
-mv *.bt2 assembledTCR_genome/
+mkdir -p assembled${RECEPTOR_ABBREV}_genome
+mv *.bt2 assembled${RECEPTOR_ABBREV}_genome/
 
 mkdir -p summary2
 mv summary/* summary2/
@@ -461,7 +463,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -480,29 +482,29 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV &
 			N=$((N+1))
 		fi
 	done
 	wait
 fi
 
-rm -r TCRsequences
-mkdir -p TCRsequences
-mv VDJ_p3* TCRsequences/
+rm -r ${RECEPTOR_ABBREV}sequences
+mkdir -p ${RECEPTOR_ABBREV}sequences
+mv VDJ_p3* ${RECEPTOR_ABBREV}sequences/
 
 echo "PART 3 COMPLETE: Reads aligned and receptor repertoires assembled"
 
 echo "Compiling results"
 
 # UPDATE SUMMARY FOLDER WITH LATEST
-echo '#!/bin/bash' > mvTCR.sh
+echo '#!/bin/bash' > mv${RECEPTOR_ABBREV}.sh
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mvTCR.sh
+	find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mv${RECEPTOR_ABBREV}.sh
 done
-chmod a+x mvTCR.sh
-./mvTCR.sh
+chmod a+x mv${RECEPTOR_ABBREV}.sh
+./mv${RECEPTOR_ABBREV}.sh
 
 if [ "$RUNR" -ge 1 ]; then
 
@@ -580,7 +582,7 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		fi
 		mkdir $OUTPUT
 
-		for cell in $CURDIR/TCRsequences/*
+		for cell in $CURDIR/${RECEPTOR_ABBREV}sequences/*
 		do
 			# read original data
 			ALL_FASTA="$cell/${chain}.fa"
@@ -663,9 +665,5 @@ if [[ $ERRCORR -ge 1 ]] ; then
 fi
 
 
-if [[ $TYPE == 't' ]]; then
-	echo "TCR identification complete! Check your results in the summary directory."
-else
-	echo "Ig identification complete! Check your results in the summary directory."
-fi
+echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary directory."
 echo `date`
