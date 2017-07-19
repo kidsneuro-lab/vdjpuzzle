@@ -540,13 +540,11 @@ fi
 waitForProcess cuff $TYPE
 
 fi
+
 if [[ $ERRCORR -ge 1 ]] ; then
 	# ERROR CORRECTION
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
 	# Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
-
-	# export PATH=/apps/bwa/0.7.12/:$PATH
-	# export PATH=/home/fzl561/scRNAseq/Tools/bcftools-1.3.1/bin/:$PATH
 
 	for chain in "${CHAIN_ARRAY[@]}"
 	do
@@ -566,12 +564,11 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
 
 		# echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
-		# exit
 
 		if [[ -e $OUTPUT ]]
 		then
 			echo "Output directory already exits, removing it"
-			rm -vrf $OUTPUT
+			rm -vr $OUTPUT
 		fi
 		mkdir $OUTPUT
 
@@ -597,23 +594,19 @@ if [[ $ERRCORR -ge 1 ]] ; then
 			CORR_SEQ=$OUTPUT/$(basename $cell)/new_${chain}.fa
 			rm -vf accepted_seq_names.txt
 
-	# 		# orange.intersect
-	# 		if [[ $(hostname) == 'orange' ]] ; then
-				migmap -S $ORGANISM --by-read -R ${chain//c} $ALL_FASTA - | cut -f1 | egrep "^>.*" >> accepted_seq_names
-	# 		else
-	# 			# sudo required for write permission on cluster
-	# 			sudo migmap -S $ORGANISM --by-read -R ${chain//c} $ALL_FASTA - |
-	# 		fi
-
 			# first tab delimited entry from migmap is the sequence name
 			# create a file with names of identified sequences
-			cut -f1 | while read x ; do
-					if [[ "$x" == ">"* ]] ; then
-						echo "$x" >> accepted_seq_names.txt;
-					fi;
-				done
+			migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $ALL_FASTA - | cut -f1 | egrep "^>.*" >> accepted_seq_names.txt
 
-			rm -vf "$CORR_SEQ"
+			## first tab delimited entry from migmap is the sequence name
+			## create a file with names of identified sequences
+			#cut -f1 | while read x ; do
+			#		if [[ "$x" == ">"* ]] ; then
+			#			echo "$x" >> accepted_seq_names.txt;
+			#		fi;
+			#	done
+
+			rm -vrf $CORR_SEQ
 
 			# go through identified sequences and use as reference for alignment
 			while read seq_name; do
