@@ -280,7 +280,7 @@ fi
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	export $chain=$SHARE_DIR/bed_files/${chain//C}_$ORGANISM.bed
+	export $chain=$SHARE_DIR/bed_files/${chain//C}_${ORGANISM}.bed
 	#export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
@@ -539,6 +539,7 @@ fi
 # wait for cuffnorm to finish
 waitForProcess cuff $TYPE
 
+fi
 if [[ $ERRCORR -ge 1 ]] ; then
 	# ERROR CORRECTION
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
@@ -582,7 +583,7 @@ if [[ $ERRCORR -ge 1 ]] ; then
 			READS_2="$cell/$R2"
 
 			# skip the case/cell where a directory does not have required files
-			if [ ! -e $ALL_FASTA -a ! -e $READS_1 -a ! -e $READS_2 ]
+			if [ ! -e $ALL_FASTA -o ! -e $READS_1 -o ! -e $READS_2 ]
 			then
 				echo "Reference file and/or reads were not found ... moving to next cell."
 				continue
@@ -598,10 +599,10 @@ if [[ $ERRCORR -ge 1 ]] ; then
 
 	# 		# orange.intersect
 	# 		if [[ $(hostname) == 'orange' ]] ; then
-				$JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+				migmap -S $ORGANISM --by-read -R ${chain//c} $ALL_FASTA - | cut -f1 | egrep "^>.*" >> accepted_seq_names
 	# 		else
 	# 			# sudo required for write permission on cluster
-	# 			sudo $JAVA18 -jar $MIGMAP -S human --by-read -R $CHAIN_TYPE $ALL_FASTA - |
+	# 			sudo migmap -S $ORGANISM --by-read -R ${chain//c} $ALL_FASTA - |
 	# 		fi
 
 			# first tab delimited entry from migmap is the sequence name
