@@ -13,15 +13,6 @@
 
 #PBS -l wd
 
-# module load samtools/0.1.18
-# export PATH=/apps/bowtie2/2.2.5/:$PATH
-# export PATH=/apps/bowtie/1.1.1/:$PATH
-# export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
-# module unload java/jdk1.7.0_25
-# module load java/jdk1.8.0_60
-# module load blast/2.2.28+
-
 set -x # echo on, command fails causes script to exit, pipes fail
 
 #parameters

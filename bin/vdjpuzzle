@@ -18,6 +18,21 @@ BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SCRIPTS_DIR=$BIN_DIR/../scripts
 SHARE_DIR=$BIN_DIR/../share
 
+
+# If conda_prefix has not been setup, then we are not in the vdjpuzzle environment and need to activate it.
+if [[ -z ${CONDA_PREFIX+x} ]]; then
+	CURDIR="$PWD"
+	cd $BIN_DIR/../
+	source activate vdjpuzzle
+	cd $CURDIR
+fi
+# If conda_prefix still does not exist, environment hasn't been created - leave this to the user.
+if [[ -z ${CONDA_PREFIX+x} ]]; then
+	echo "Unable to activate vdjpuzzle conda environment, ensure that you have created the environment correctly - see README.md"
+	exit
+fi
+
+
 >&2 echo "Running VDJPuzzle executable from directory: $BIN_DIR"
 >&2 echo "Running on date: " `date`
 
@@ -29,7 +44,7 @@ function printHelp {
 	>&2 echo -e "--CPU=n\truns with n processes"
 	>&2 echo -e "--THR=n\truns bowtie and tophat with n threads (default 8)"
 	>&2 echo -e "--species=(human|mouse)\tspecified human (default) or mouse organism"
-	>&2 echo -e "--err-corr\tPerform final error correction on consensus sequence"
+	>&2 echo -e "--no-err-corr\tDo not perform final error correction on consensus sequence"
 	>&2 echo -e "--only-statistics\tExecutes only summary statistics script"
 	>&2 echo -e "--no-statistics\tDo not execute summary statistics script"
 	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
@@ -56,25 +71,7 @@ function waitForProcess {
 	done
 }
 
-# module unload samtools/0.1.18
-# module load tophat/2.0.7
-# module unload samtools/1.3.1
-# module load samtools/0.1.18
-# module load bowtie2/2.1.0
-#
-# module load cufflinks/2.2.1
-# module load bedtools/2.26.0
-# module load blast/2.2.28+
-
 #CONFIGURE SCRIPT PATHS
-# export PATH=/apps/bowtie2/2.1.0/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
-# export PATH=/apps/samtools/0.1.18/bin/:$PATH
-# export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/Blast/usr/bin/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
-# export PATH=/apps/cufflinks/2.2.1/bin/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/cufflinks-2.2.1.Linux_x86_64/:$PATH
 export MIGMAP=`which migmap` #/short/va1/fzl561/scRNAseq/Tools/migmap-0.9.7/migmap-0.9.7.jar
 export trinitypath=`which Trinity` #/short/va1/fzl561/scRNAseq/Tools/trinityrnaseq-2.0.6/Trinity
 export TOPHAT=`which tophat2` # /apps/tophat/2.0.7/tophat2
@@ -82,17 +79,14 @@ export BOWTIE=`which bowtie2` # /apps/bowtie2/2.1.0/bowtie2
 export BOWTIEBUILD=`which bowtie2-build` # /apps/bowtie2/2.1.0/bowtie2-build
 export SAMTOOLS=`which samtools` # /apps/samtools/0.1.18/bin/samtools
 export BEDTOOLS=`which intersectBed` # /apps/bedtools/2.26.0/bin/intersectBed
-#export JAVA18=/apps/java/jdk1.8.0_60/bin/java #Java18 is included in the package so don't edit this path
+export featureCounts=`which featureCounts` # /short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
 if [[ ! -z ${CONDA_PREFIX+x} ]]; then
 	export TRIMMOMATIC=`which trimmomatic` # /short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
 else
 	export TRIMMOMATIC=/short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
 fi
-export featureCounts=`which featureCounts` # /short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
 
 ### TRIMMING PARAMETERS ###
-
-
 if [[ ! -z ${CONDA_PREFIX+x} ]]; then
 	export ADAPTERS=${CONDA_PREFIX}/share/trimmomatic/adapters/NexteraPE-PE.fa
 else
@@ -107,7 +101,7 @@ export AVGQUAL=20
 
 #SET DEFAULT PARAMETERS
 PARALLEL=1
-ERRCORR=0
+NOERRCORR=0
 NTHREADS=1
 COUNTS=0
 RUNTCR=1
@@ -178,8 +172,8 @@ do
 		shift
 		;;
 
-		--err-corr)
-		ERRCORR=1
+		--no-err-corr)
+		NOERRCORR=1
 		shift
 		;;
 
@@ -249,18 +243,15 @@ fi
 
 if [[ -z "$BOWTIE_INDEX" ]]; then
 	echo "No bowtie index path provided, using default path"
-        BOWTIE_INDEX=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/genome
-        export BOWTIE_INDEX
+        export BOWTIE_INDEX=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/genome
 fi
 
 if [[ -z "$ANNOTATION" ]]; then
 	echo "No gene annotation file provided, using default path"
-        ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
-        export ANNOTATION
+        export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
 fi
 
 #CONFIGURE REFERENCE PATHS
-
 if [ "$TYPE" == "t" ]; then
 	CHAIN_ARRAY=('TCRA' 'TCRB')
 	CHAIN_PREFIX_ARRAY=('a' 'b')
@@ -275,13 +266,9 @@ if [[ $TRANSCRIPTOMIC -ge 1 ]]; then
 	cell_type=''
 fi
 
-#export ENSEMBL=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome # now BOWTIE_INDEX
-#export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
-
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	export $chain=$SHARE_DIR/bed_files/${chain//C}_${ORGANISM}.bed
-	#export $chain=/short/va1/fzl561/scRNAseq/refGenome/BED_files/${chain//C}_$ORGANISM.bed
 done
 
 export CUFFOUTPUT=$PWD/CuffQuant
@@ -447,7 +434,7 @@ echo "PART 2 COMPLETE: Finished building reference genome"
 
 
 echo "STARTING PART 3: Realigning reads to newly constructed genome"
-#PART3 -
+#PART3
 if [[ $QSUB -ge 1 ]] ; then
 	N=1
 	for d in $RNADIR/*
@@ -541,7 +528,7 @@ fi
 # wait for cuffnorm to finish
 waitForProcess cuff $TYPE
 
-if [[ $ERRCORR -ge 1 ]] ; then
+if [[ $NOERRCORR -lt 1 ]] ; then
 	# ERROR CORRECTION
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
 	# Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
@@ -551,20 +538,8 @@ if [[ $ERRCORR -ge 1 ]] ; then
 		R1="reads_${chain}_1.fastq"
 		R2="reads_${chain}_2.fastq"
 
-		# # Set up fasta filename containing all reconstructed sequences
-		# if [[ $TYPE == 't' ]] ; then
-		# 	# tcr_[ab].fa
-		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{3\}/&_/').fa"
-		# else
-		# 	# ig_[hkl].fa
-		# 	ORIG_REF="$(echo $chain | tr '[:upper:]' '[:lower:]' | sed -e 's/^.\{2\}/&_/').fa"
-		# fi
-
 		# create directory for storing results
 		OUTPUT=$CURDIR/"$(echo ${chain//c} | tr '[:upper:]' '[:lower:]')"_err_corr
-
-		# echo "CURDIR:\t$CURDIR\nR1:\t$R1\nR2:\t$R2\nORIG_REF:\t$ORIG_REF\nOUTPUT:\t$OUTPUT\n"
-
 		if [[ -e $OUTPUT ]]
 		then
 			echo "Output directory already exits, removing it"
@@ -598,14 +573,6 @@ if [[ $ERRCORR -ge 1 ]] ; then
 			# create a file with names of identified sequences
 			migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $ALL_FASTA - | cut -f1 | egrep "^>.*" >> accepted_seq_names.txt
 
-			## first tab delimited entry from migmap is the sequence name
-			## create a file with names of identified sequences
-			#cut -f1 | while read x ; do
-			#		if [[ "$x" == ">"* ]] ; then
-			#			echo "$x" >> accepted_seq_names.txt;
-			#		fi;
-			#	done
-
 			rm -vrf $CORR_SEQ
 
 			# go through identified sequences and use as reference for alignment
@@ -623,18 +590,7 @@ if [[ $ERRCORR -ge 1 ]] ; then
 
 				samtools mpileup -uf reference.fasta alignment.bam |
 
-	# 			if [[ $(hostname) == 'orange' ]] ; then
-					bcftools call -c | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
-	# 			else
-	# 				# cluster 21
-	# 				bcftools view -cg - | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
-	# 			fi
-
-				# http://samtools.sourceforge.net/mpileup.shtml
-				# alternative but produces truncated consensus and ambiguous bases
-				# use vcfutils, skip first line which is the sequence ID, convert to a single line, stop after the + character (now have the consensus sequence)
-				# samtools mpileup -uf reference.fasta alignment.bam | bcftools view -cg - |
-					# vcfutils.pl vcf2fq | tail -n +2 | tr -d '\n' | cut -f1 -d +
+				bcftools call -c | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
 
 				echo "writing sequence to file ..."
 				cat new_reference.fasta >> $CORR_SEQ

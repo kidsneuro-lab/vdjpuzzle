@@ -55,18 +55,6 @@ Q4=$param4
 CHAIN_ARRAY=($param7)
 CHAIN_PREFIX_ARRAY=($param8)
 
-# export PATH=/apps/bowtie2/2.1.0/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/bowtie/bowtie-1.1.2/:$PATH
-# export PATH=/apps/java/jdk1.7.0_25/bin/:$PATH
-# export PATH=/short/va1/fzl561/scRNAseq/Tools/igblastwrapper_linux64/bin/:$PATH
-# module unload samtools/0.1.18
-# module load tophat/2.0.7
-# module unload samtools/1.3.1
-# module load samtools/0.1.18
-# module load bowtie2/2.1.0
-# module load cufflinks/2.2.1
-# module load bedtools/2.26.0
-
 rm -f $Q3/overlapping_reads*
 for prefix in "${CHAIN_PREFIX_ARRAY[@]}"
 do
@@ -96,20 +84,13 @@ if [ "$param6" -ge 1 ]; then
 
 	trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
 	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
-#	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $PAIR_1
-#	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $PAIR_2
 else
 	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
-#	$TOPHAT -o $Q3/out/tophat_run1 -p $param9 $BOWTIE_INDEX $Q1
-#	$TOPHAT -o $Q3/out/tophat_run2 -p $param9 $BOWTIE_INDEX $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then
   echo #cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
 fi
-
-# module unload samtools/0.1.18
-# module load samtools/1.2
 
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
@@ -137,14 +118,9 @@ do
 
 	mv $Q3/trinity_out_dir/Trinity.fasta $Q3/${chain}.fa
 	rm -rf $Q3/trinity_out_dir
-#	rm -f $Q3/overlapping_reads*
 
 	index=$((index+1))
 done
-
-# module unload java/jdk1.7.0_25
-# module load java/jdk1.8.0_60
-# module load blast/2.2.28+
 
 mkdir -p $param4/summary
 
