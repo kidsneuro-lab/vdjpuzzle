@@ -205,7 +205,7 @@ do
 			exit 1
 		fi
 		export BOWTIE_INDEX
-		# default /short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/${cell_type}genome
+		# default /short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/genome
 		shift
 		;;
 
@@ -255,15 +255,9 @@ fi
 if [ "$TYPE" == "t" ]; then
 	CHAIN_ARRAY=('TCRA' 'TCRB')
 	CHAIN_PREFIX_ARRAY=('a' 'b')
-	cell_type='tcell_'
 else
 	CHAIN_ARRAY=('IGH' 'IGK' 'IGL')
 	CHAIN_PREFIX_ARRAY=('h' 'k' 'l')
-	cell_type='bcell_'
-fi
-
-if [[ $TRANSCRIPTOMIC -ge 1 ]]; then
-	cell_type=''
 fi
 
 for chain in "${CHAIN_ARRAY[@]}"
