@@ -129,7 +129,11 @@ mkdir -p $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $param10 $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	if [[ $param10 -ge 1 ]] ; then
+		migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	else
+		migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	fi
 done
 
 rm -f $CELL_PATH/merged*

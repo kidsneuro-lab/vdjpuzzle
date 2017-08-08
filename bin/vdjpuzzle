@@ -104,7 +104,7 @@ export AVGQUAL=20
 PARALLEL=1
 NOERRCORR=0
 NTHREADS=1
-MIGMAP_DETAILS=""
+USE_MIGMAP_DETAILS=0
 COUNTS=0
 RUNTCR=1
 RUNR=1
@@ -161,7 +161,7 @@ do
 		;;
 
         --details)
-        MIGMAP_DETAILS="--details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt"
+        USE_MIGMAP_DETAILS=1
         shift
         ;;
 
@@ -315,7 +315,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10="$MIGMAP_DETAILS",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
+			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -334,7 +334,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS "$MIGMAP_DETAILS" &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS &
 		fi
 		N=$((N+1))
 	done
@@ -446,7 +446,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10="$MIGMAP_DETAILS",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10=$USE_MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -465,7 +465,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV "$MIGMAP_DETAILS" &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt &
 			N=$((N+1))
 		fi
 	done
@@ -623,7 +623,11 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			done <accepted_seq_names.txt
 			rm -vf accepted_seq_names.txt
 
-			migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $MIGMAP_DETAILS $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+			if [[ $USE_MIGMAP_DETAILS -ge 1 ]] ; then 
+				migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+			else
+				migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+			fi
 
 			echo "Done, moving to next cell"
 		done
