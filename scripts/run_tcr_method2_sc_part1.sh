@@ -26,6 +26,7 @@ if [[ -n "$P3" ]]; then
 	param7=$P7
 	param8=$P8
 	param9=$P9
+	param10=$P10
 else
 	param1=$1
 	param2=$2
@@ -36,6 +37,7 @@ else
 	param7=$7
 	param8=$8
 	param9=$9
+	param10=$10
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
@@ -72,7 +74,8 @@ P5: $param5
 P6: $param6
 P7: $param7
 P8: $param8
-P9: $param9"
+P9: $param9
+P10: $param10"
 
 echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
@@ -126,7 +129,7 @@ mkdir -p $param4/summary
 
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
+	migmap -S $param3 -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $param10 $Q3/${chain}.fa $param4/summary/${chain//C}_$param2
 done
 
 rm -f $CELL_PATH/merged*

@@ -45,6 +45,7 @@ function printHelp {
 	>&2 echo -e "--THR=n\truns bowtie and tophat with n threads (default 8)"
 	>&2 echo -e "--species=(human|mouse)\tspecified human (default) or mouse organism"
 	>&2 echo -e "--no-err-corr\tDo not perform final error correction on consensus sequence"
+    >&2 echo -e "--details\tRuns MiGMAP with the details parameter"
 	>&2 echo -e "--only-statistics\tExecutes only summary statistics script"
 	>&2 echo -e "--no-statistics\tDo not execute summary statistics script"
 	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
@@ -103,6 +104,7 @@ export AVGQUAL=20
 PARALLEL=1
 NOERRCORR=0
 NTHREADS=1
+MIGMAP_DETAILS=""
 COUNTS=0
 RUNTCR=1
 RUNR=1
@@ -157,6 +159,11 @@ do
 		fi
 		shift
 		;;
+
+        --details)
+        MIGMAP_DETAILS="--details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt"
+        shift
+        ;;
 
 		--only-statistics)
 		RUNTCR=0
@@ -308,7 +315,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
+			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -327,7 +334,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $MIGMAP_DETAILS &
 		fi
 		N=$((N+1))
 	done
@@ -439,7 +446,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10=$MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -458,7 +465,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV $MIGMAP_DETAILS &
 			N=$((N+1))
 		fi
 	done
@@ -477,7 +484,16 @@ echo "Compiling results"
 echo '#!/bin/bash' > mv${RECEPTOR_ABBREV}.sh
 for chain in "${CHAIN_ARRAY[@]}"
 do
-	find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mv${RECEPTOR_ABBREV}.sh
+	# find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mv${RECEPTOR_ABBREV}.sh
+	for file in find summary2 -name "${chain//C}_*"
+	do 
+		if [[ $(wc -l $file) -gt 1 ]]; then
+			echo "mv $file summary/" >> mv${RECEPTOR_ABBREV}.sh
+			chain=$file
+			echo "mv preliminary/"$(basename $file | sed 's/^[A-Z]{3,4}_/VDJ_p1_/g')/$chain.fa ${RECEPTOR_ABBREV}"sequences/"$(basename $file | sed 's/^[A-Z]{3,4}_/VDJ_p3_/g')/$chain.fa >> mv${RECEPTOR_ABBREV}.sh  
+		fi
+
+	done
 done
 chmod a+x mv${RECEPTOR_ABBREV}.sh
 ./mv${RECEPTOR_ABBREV}.sh
@@ -527,6 +543,9 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
 	# Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
 
+	mkdir $CURDIR/summary_corrected
+
+	echo -e "CellID\t#reads" > $CURDIR/${RECEPTOR_ABBREV}_expression.tsv
 	for chain in "${CHAIN_ARRAY[@]}"
 	do
 		R1="reads_${chain}_1.fastq"
@@ -582,6 +601,10 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 				samtools index alignment.bam
 				echo "samtools index finished"
 
+				# Get the number of reads
+				readcount=$(samtools view -F 0x4 alignment.bam | cut -f 1 | sort | uniq | wc -l)
+				echo -e "$(basename $cell)\t$readcount" >> $CURDIR/${RECEPTOR_ABBREV}_expression.tsv
+
 				samtools mpileup -uf reference.fasta alignment.bam |
 
 				bcftools call -c | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
@@ -599,6 +622,9 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 
 			done <accepted_seq_names.txt
 			rm -vf accepted_seq_names.txt
+
+			migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $MIGMAP_DETAILS $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+
 			echo "Done, moving to next cell"
 		done
 	done
