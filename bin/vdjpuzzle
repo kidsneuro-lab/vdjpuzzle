@@ -315,7 +315,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
+			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10="$MIGMAP_DETAILS",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -334,7 +334,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $MIGMAP_DETAILS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS "$MIGMAP_DETAILS" &
 		fi
 		N=$((N+1))
 	done
@@ -446,7 +446,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10=$MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
+			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10="$MIGMAP_DETAILS",PATH_PARAM=$PATH $SCRIPTS_DIR/run_tcr_method2_sc_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -465,7 +465,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV $MIGMAP_DETAILS &
+			$SCRIPTS_DIR/run_tcr_method2_sc_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV "$MIGMAP_DETAILS" &
 			N=$((N+1))
 		fi
 	done
