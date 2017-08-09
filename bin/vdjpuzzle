@@ -296,6 +296,7 @@ cd $RNADIR
 RNADIR="$PWD"
 cd $CURDIR
 
+
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
 	mkdir -p $CUFFOUTPUT
 	echo "Transcriptomic quantification"
@@ -485,18 +486,17 @@ echo '#!/bin/bash' > mv${RECEPTOR_ABBREV}.sh
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	# find summary2 -name "${chain//C}_*" -exec awk 'END { if (NR > 1) print "mv " FILENAME " summary/" }' {} \; >> mv${RECEPTOR_ABBREV}.sh
-	for file in find summary2 -name "${chain//C}_*"
+	for file in $(find summary2 -name "${chain//C}_*")
 	do 
-		if [[ $(wc -l $file) -gt 1 ]]; then
+		if [[ $(cat $file | wc -l) -gt 1 ]]; then
 			echo "mv $file summary/" >> mv${RECEPTOR_ABBREV}.sh
-			chain=$file
-			echo "mv preliminary/"$(basename $file | sed 's/^[A-Z]{3,4}_/VDJ_p1_/g')/$chain.fa ${RECEPTOR_ABBREV}"sequences/"$(basename $file | sed 's/^[A-Z]{3,4}_/VDJ_p3_/g')/$chain.fa >> mv${RECEPTOR_ABBREV}.sh  
+			echo "mv preliminary/$(basename $file | sed 's/^\(TRA\|TRB\|IGH\|IGK\|IGL\)_/VDJ_p1_/')/$chain.fa ${RECEPTOR_ABBREV}sequences/$(basename $file | sed 's/^\(TRA\|TRB\|IGH\|IGK\|IGL\)_/VDJ_p3_/')/$chain.fa" >> mv${RECEPTOR_ABBREV}.sh
 		fi
-
 	done
 done
 chmod a+x mv${RECEPTOR_ABBREV}.sh
 ./mv${RECEPTOR_ABBREV}.sh
+
 
 if [ "$RUNR" -ge 1 ]; then
 
@@ -543,9 +543,14 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 	# Requires fasta file of reference (reconstructed) sequences and paired end reads
 	# Will run migmap, take identified sequences, align reads and produce the corrected consensus sequence
 
-	mkdir $CURDIR/summary_corrected
+    if [[ -e "$CURDIR/summary_corrected" ]]
+    then
+			echo "summary_corrected directory already exits, removing it"
+			rm -vr "$CURDIR/summary_corrected"
+    fi
+	mkdir "$CURDIR/summary_corrected"
 
-	echo -e "CellID\t#reads" > $CURDIR/${RECEPTOR_ABBREV}_expression.tsv
+	echo -e "CellID\tSequence name\t#reads" > "$CURDIR/${RECEPTOR_ABBREV}_expression.tsv"
 	for chain in "${CHAIN_ARRAY[@]}"
 	do
 		R1="reads_${chain}_1.fastq"
@@ -590,6 +595,8 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 
 			# go through identified sequences and use as reference for alignment
 			while read seq_name; do
+
+                seq_name_prefix=$(echo $seq_name | egrep -o "^>[^[:space:]]+")
 				# create a fasta reference file with a single sequence, index it as required
 				python $SCRIPTS_DIR/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
 				samtools faidx reference.fasta
@@ -603,7 +610,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 
 				# Get the number of reads
 				readcount=$(samtools view -F 0x4 alignment.bam | cut -f 1 | sort | uniq | wc -l)
-				echo -e "$(basename $cell)\t$readcount" >> $CURDIR/${RECEPTOR_ABBREV}_expression.tsv
+				echo -e "${chain//C}_$(basename $cell | sed 's/VDJ_p3_//')\t$seq_name_prefix\t$readcount" >> $CURDIR/${RECEPTOR_ABBREV}_expression.tsv
 
 				samtools mpileup -uf reference.fasta alignment.bam |
 
