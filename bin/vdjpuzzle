@@ -70,8 +70,6 @@ function waitForProcess {
 		sleep $sleep_time
 		status=`qstat -u $USER 2>&1 | grep "p${1}_${2}\|cannot connect to server\|errno="`
 	done
-
-	if 
 }
 
 #CONFIGURE SCRIPT PATHS
