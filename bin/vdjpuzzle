@@ -69,9 +69,7 @@ function waitForProcess {
 	do
 		sleep $sleep_time
 		status=`qstat -u $USER 2>&1 | grep "p${1}_${2}\|cannot connect to server\|errno="`
-	done
-
-	if 
+	done 
 }
 
 #CONFIGURE SCRIPT PATHS
@@ -641,8 +639,44 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			echo "Done, moving to next cell"
 		done
 	done
+
+	if [ "$RUNR" -ge 1 ]; then
+		index=0
+		for chain in "${CHAIN_ARRAY[@]}"
+		do
+			cat summary_corrected/${chain//C}* > summary_corrected/h${index}.txt
+			head -1 summary_corrected/h${index}.txt > summary_corrected/header${index}.txt
+			rm summary_corrected/${chain//C}tmp.txt
+			rm summary_corrected/${chain//C}_cells.txt
+			rm summary_corrected/${chain//C}.csv
+
+			for tcr in summary_corrected/${chain//C}*;
+			do
+				if [ "$(cat $tcr | wc -l)" -ge 2 ]; then
+					number="$(cat $tcr | wc -l)"
+					number="$(expr $number - 1)"
+					for i in `seq $number`; do
+						echo ${tcr##*/} >> summary_corrected/${chain//C}_cells.txt
+					done
+					tail -n +2 $tcr >> summary_corrected/${chain//C}tmp.txt
+				fi
+			done
+
+			cat summary_corrected/header${index}.txt summary_corrected/${chain//C}tmp.txt > summary_corrected/single_cells_${chain//C}.txt
+			echo "CellID" > summary_corrected/single_cells_ID_${chain//C}.txt
+			cat summary_corrected/${chain//C}_cells.txt >> summary_corrected/single_cells_ID_${chain//C}.txt
+			paste -d"\t" summary_corrected/single_cells_ID_${chain//C}.txt summary_corrected/single_cells_${chain//C}.txt > summary_corrected/${chain//C}.csv
+			rm summary_corrected/h${index}.txt
+			rm summary_corrected/header${index}.txt
+			rm summary_corrected/${chain//C}tmp.txt
+			rm summary_corrected/${chain//C}_cells.txt
+			rm summary_corrected/single_cells_${chain//C}.txt
+			rm summary_corrected/single_cells_ID_${chain//C}.txt
+			index=$((index+1))
+		done
+	fi
 fi
 
 
-echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary directory."
+echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary_corrected directory."
 echo `date`
