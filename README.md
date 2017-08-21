@@ -17,7 +17,7 @@ Usage: `./vdjpuzzle directory_name [option]`
 |--type=(t⎮b)|specifies tcell (default or bcell analysis|
 |--CPU=n|runs with n processes|
 |--THR=n|runs bowtie and tophat with n threads (default 8)|
-|--species=(human|mouse)|specified human (default) or mouse organism|
+|--species=(human⎮mouse)|specified human (default) or mouse organism|
 |--no-err-corr|Do not perform final error correction on consensus sequence|
 |--only-statistics|Executes only summary statistics script|
 |--no-statistics|Do not execute summary statistics script|
