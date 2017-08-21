@@ -27,6 +27,5 @@ Usage: `./vdjpuzzle directory_name [option]`
 
 ## Citation
 
-Manuscript is under review, in the meantime you can cite the first version of VDJPuzzle:
+Manuscript is under review, in the meantime you can cite our biorxiv:
 
-Auda Eltahla*, Simone Rizzetto*, Mehdi Rasoli*, Brigid Betz-Stablein, Vanessa Venturi, Katherine Kedzierska, Andrew R Lloyd, Rowena A Bull and Fabio Luciani. Linking the T cell receptor to the single cell transcriptome in antigen-specific human T cells. Immunology and cell biology, 2016, doi: 10.1038/icb.2016.16G 
