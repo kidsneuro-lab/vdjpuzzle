@@ -14,7 +14,7 @@ Usage: `./vdjpuzzle directory_name [option]`
 
 |--help|show the help|
 |--qsub|executes on the cluster (overrides --CPU flag)|
-|--type=(t|b)|specifies tcell (default or bcell analysis|
+|--type=(t\|b)|specifies tcell (default or bcell analysis|
 |--CPU=n|runs with n processes|
 |--THR=n|runs bowtie and tophat with n threads (default 8)|
 |--species=(human|mouse)|specified human (default) or mouse organism|
