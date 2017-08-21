@@ -1,4 +1,4 @@
-# README #
+# VDJPuzzle2 - README #
 
 ## Setup
 
