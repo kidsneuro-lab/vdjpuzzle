@@ -596,7 +596,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			# go through identified sequences and use as reference for alignment
 			while read seq_name; do
 
-                seq_name_prefix=$(echo $seq_name | egrep -o "^>[^[:space:]]+")
+				seq_name_prefix=$(echo $seq_name | egrep -o "^>[^[:space:]]+")
 				# create a fasta reference file with a single sequence, index it as required
 				python $SCRIPTS_DIR/extract_fasta.py "$seq_name" $ALL_FASTA # creates reference.fasta
 				samtools faidx reference.fasta
