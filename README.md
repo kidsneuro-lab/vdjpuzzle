@@ -1,5 +1,7 @@
 # VDJPuzzle2 - README #
 
+TCR and BCR reconstruction from scRNA-seq data
+
 ## Setup
 
 Run `conda create --name vdjpuzzle --file environment-explicit.txt` to create the conda environment. 
