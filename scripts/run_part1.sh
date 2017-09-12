@@ -92,7 +92,7 @@ else
 fi
 
 if [ "$param5" -ge 1 ]; then
-  echo #cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
+	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
 fi
 
 index=0
