@@ -15,6 +15,7 @@ Symlink or copy bin/vdjpuzzle into your path, and run `nohup ./vdjpuzzle Example
 Usage: `./vdjpuzzle directory_name [option]`
 
 |parameter|description|
+
 |--help|show the help|
 |--qsub|executes on the cluster (overrides --CPU flag)|
 |--type=(t⎮b)|specifies tcell (default) or bcell analysis|
