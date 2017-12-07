@@ -28,6 +28,8 @@ Usage: `./vdjpuzzle directory_name [option]`
 |--transcriptomic|Enable cuffquant/cuffnorm gene quantification measurements|
 |--trim|Trim reads using Trimmomatic|
 |--counts|Enable featureCounts gene quantification measurements|
+|--bowtie-index=path\_to\_bt2\_index|Location of the bowtie index files including the prefix (e.g. /path/to/bt2/genome)|
+|--gtf=path\_to\_gtf\|Location of the GTF annotation file|
 
 ## Citation
 
