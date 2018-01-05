@@ -45,7 +45,6 @@ function printHelp {
 	>&2 echo -e "--THR=n\truns bowtie and tophat with n threads (default 8)"
 	>&2 echo -e "--species=(human|mouse)\tspecified human (default) or mouse organism"
 	>&2 echo -e "--no-err-corr\tDo not perform final error correction on consensus sequence"
-    >&2 echo -e "--details\tRuns MiGMAP with the details parameter"
 	>&2 echo -e "--only-statistics\tExecutes only summary statistics script"
 	>&2 echo -e "--no-statistics\tDo not execute summary statistics script"
 	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
@@ -104,7 +103,7 @@ export AVGQUAL=20
 PARALLEL=1
 NOERRCORR=0
 NTHREADS=1
-USE_MIGMAP_DETAILS=0
+USE_MIGMAP_DETAILS=1
 COUNTS=0
 RUNTCR=1
 RUNR=1
@@ -159,11 +158,6 @@ do
 		fi
 		shift
 		;;
-
-        --details)
-        USE_MIGMAP_DETAILS=1
-        shift
-        ;;
 
 		--only-statistics)
 		RUNTCR=0
