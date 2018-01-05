@@ -31,6 +31,15 @@ Usage: `./vdjpuzzle directory_name [option]`
 |--bowtie-index=path\_to\_bt2\_index|Location of the bowtie index files including the prefix (e.g. /path/to/bt2/genome)|
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
 
+An additional script to plot gene expression as an heatmap annotated with mutation rates and other phenotype data is provided in scripts/mutation\_gene\_expression\_analysis.R
+|parameter|description|
+| ------------- |-------------|
+|--help|show the help|
+|-g file|Gene annotation used for CuffNorm|
+|-f file|CuffNorm FPKM matrix|
+|-a file|Annotation file for each cell. First column contains cell ID|
+
+
 ## Citation
 
 Manuscript is under review, in the meantime you can cite our biorxiv:
