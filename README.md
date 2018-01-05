@@ -32,6 +32,7 @@ Usage: `./vdjpuzzle directory_name [option]`
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
 
 An additional script to plot gene expression as an heatmap annotated with mutation rates and other phenotype data is provided in scripts/mutation\_gene\_expression\_analysis.R
+
 |parameter|description|
 | ------------- |-------------|
 |--help|show the help|
