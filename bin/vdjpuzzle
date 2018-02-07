@@ -49,6 +49,7 @@ function printHelp {
 	>&2 echo -e "--no-statistics\tDo not execute summary statistics script"
 	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
 	>&2 echo -e "--trim\tTrim reads using Trimmomatic"
+	>&2 echo -e "--trim-galore\tTrim reads using Trim galore"
 	>&2 echo -e "--counts\tEnable featureCounts gene quantification measurements"
 }
 
