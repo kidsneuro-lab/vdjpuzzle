@@ -109,10 +109,10 @@ RUNTCR=1
 RUNR=1
 ORGANISM=human
 TRIM=0
+TRIMG=1
 QSUB=0
 TRANSCRIPTOMIC=0
 TYPE='t'
-
 
 # make log directory
 mkdir -p log
@@ -185,6 +185,11 @@ do
 
 		--trim)
 		TRIM=1
+		shift
+		;;
+
+		--trim-galore)
+		TRIMG=1
 		shift
 		;;
 
@@ -310,7 +315,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh
+			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -329,7 +334,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS &
+			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG &
 		fi
 		N=$((N+1))
 	done
@@ -441,7 +446,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10=$USE_MIGMAP_DETAILS,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part3.sh
+			qsub -N "p3_${TYPE}_$N" -e "log/p3_${TYPE}_$N.err" -o "log/p3_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRIM,P6="${CHAIN_ARRAY[*]}",P7="${CHAIN_PREFIX_ARRAY[*]}",P8=$NTHREADS,P9="$RECEPTOR_ABBREV",P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part3.sh
 			N=$((N+1))
 		fi
 	done
@@ -460,7 +465,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt &
+			$SCRIPTS_DIR/run_part3.sh $di $filename $ORGANISM $PWD $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $RECEPTOR_ABBREV $USE_MIGMAP_DETAILS $TRIMG &
 			N=$((N+1))
 		fi
 	done

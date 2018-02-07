@@ -75,20 +75,33 @@ P6: $param6
 P7: $param7
 P8: $param8
 P9: $param9
-P10: $param10"
+P10: $param10
+P11: $param11"
 
 echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
 if [ "$param6" -ge 1 ]; then
-	PAIR_1="${CELL_PATH}/PAIRED_${FNAME1}"
-	PAIR_2="${CELL_PATH}/PAIRED_${FNAME2}"
-	UNPAIR_1="${CELL_PATH}/UNPAIRED_${FNAME1}"
-	UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
+        PAIR_1="${CELL_PATH}/PAIRED_${FNAME1}"
+        PAIR_2="${CELL_PATH}/PAIRED_${FNAME2}"
+        UNPAIR_1="${CELL_PATH}/UNPAIRED_${FNAME1}"
+        UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
-	trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+        trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
+        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+elif [ "$param11" -ge 1 ]; then
+        echo "Trimming with trim-galore"
+        filename1="${FNAME1%.*}"
+        filename1="${filename1%.*}"
+        filename2="${FNAME2%.*}"
+        filename2="${filename2%.*}"
+        echo $filename
+        PAIR_1="${CELL_PATH}/${filename1}_val_1.fq.gz"
+        PAIR_2="${CELL_PATH}/${filename2}_val_2.fq.gz"
+        echo $PAIR_1
+        trim_galore --paired -o "${CELL_PATH}" $Q1 $Q2
+        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
 else
-	tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
+        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
 fi
 
 if [ "$param5" -ge 1 ]; then

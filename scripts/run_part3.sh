@@ -27,6 +27,7 @@ if [[ -n "$P3" ]]; then
 	param8=$P8
 	param9=$P9
 	param10=$P10
+	param11=$p11
 else
 	param1=$1
 	param2=$2
@@ -38,6 +39,7 @@ else
 	param8=$8
 	param9=$9
 	param10=$10
+	param11=$11
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
@@ -66,7 +68,8 @@ P6: $param6
 P7: $param7
 P8: $param8
 P9: $param9
-P10: $param10"
+P10: $param10
+P11: $param11"
 
 rm $Q3/overlapping_reads*
 for prefix in "${CHAIN_PREFIX_ARRAY[@]}"
@@ -80,6 +83,16 @@ mkdir -p $Q3/out
 if [ "$param5" -ge 1 ]; then
 	Q1="${CELL_PATH}/PAIRED_${FNAME1}"
 	Q2="${CELL_PATH}/PAIRED_${FNAME2}"
+fi
+
+if [ "$param11" -ge 1 ]; then
+	echo "Trim galore"
+	filename1="${FNAME1%.*}"
+	filename1="${filename1%.*}"
+	filename2="${FNAME2%.*}"
+	filename2="${filename2%.*}"
+	Q1="${CELL_PATH}/{filename1}_val_1.fq.gz"
+	Q2="${CELL_PATH}/{filename2}_val_2.fq.gz"
 fi
 
 for chain in "${CHAIN_ARRAY[@]}"
