@@ -115,18 +115,18 @@ do
 	echo ${!chain}
 	intersectBed -wa -abam $Q3/out/tophat_both/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_both/overlapping_reads.bam
 
-	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -v "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
+	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -av "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
 	cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
-	grep ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
+	grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
 
 	# find fastq entries containing overlapping read IDs from either raw or trimmed fastq files
 	# get rid of pesky -- lines which appear for some reason using "^\-\-$"
 	if [ "$param6" -ge 1 ]; then # we are using trimmed reads
-		zcat $PAIR_1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $PAIR_2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	else
-		zcat $Q1 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $Q2 | grep -f $Q3/overlapping_readsID.txt -A 3 -F | egrep -v "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	fi
 
 	# rebuild the trinity index

@@ -38,7 +38,7 @@ fi
 
 function printHelp {
 	>&2 echo "VDJPuzzle v2.0"
-	>&2 echo "Usage: ./vdjpuzzle directory_name [option]"
+	>&2 echo "Usage: ./vdjpuzzle directory_name --bowtie-index=/path/to/index/index_prefix --gtf=/path/to/gtf_file.gtf [options]"
 	>&2 echo -e "--qsub\texecutes on the cluster (overrides --CPU flag)"
 	>&2 echo -e "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
 	>&2 echo -e "--CPU=n\truns with n processes"
@@ -249,13 +249,13 @@ if [[ -z "$RNADIR" ]]; then
 fi
 
 if [[ -z "$BOWTIE_INDEX" ]]; then
-	echo "No bowtie index path provided, using default path"
-        export BOWTIE_INDEX=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Bowtie2Index/genome
+	echo "No bowtie index path provided, please specify one with the option --bowtie-index=/path/to/index/index_prefix"
+	exit 1
 fi
 
 if [[ -z "$ANNOTATION" ]]; then
-	echo "No gene annotation file provided, using default path"
-        export ANNOTATION=/short/va1/fzl561/scRNAseq/refGenome/$ORGANISM/Genes/genes.gtf
+	echo "No gene annotation file provided, please specify one with the option --gtf=/path/to/gtf_file.gtf"
+	exit 1
 fi
 
 #CONFIGURE REFERENCE PATHS
