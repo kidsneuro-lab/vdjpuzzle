@@ -12,11 +12,13 @@ Type `source activate vdjpuzzle` to activate the environment.
 
 Symlink or copy bin/vdjpuzzle into your path by copying the following command in the .bashrc file in your home directory and substituting path_to_vdjpuzzle_dir with the absolute VDJPuzzle directory
 
-export PATH=/path_to_vdjpuzzle_dir/bin:$PATH
+`export PATH=/path_to_vdjpuzzle_dir/bin:$PATH`
 
 VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). This contains the bowtie index and genome annotation required to run VDJPuzzle.
 
-run an example with `nohup vdjpuzzle Example --bowtie-index=path_to_bt2_index/genome --gtf=path_to_gene_annotations.gtf > LOG.txt &` from the VDJPuzzle directory, you can run it on a different directory but make sure that "Example" is pointing to the Example directory in this repository. 
+run an example with `nohup vdjpuzzle Example --bowtie-index=path_to_bt2_index/genome --gtf=path_to_gene_annotations.gtf > LOG.txt &` from the VDJPuzzle directory, you can run it on a different directory but make sure that "Example" is pointing to the Example directory in this repository.
+
+This command will take approximaly 30 minutes to complete. You will find the output in the summary_corrected directory.
 
 ## Run VDJPuzzle with a different reference genome
 VDJPuzzle uses a BED file to locate the position of the VDJ genes in the genome. The BED files provided are built for the Ensembl reference genome.
@@ -28,7 +30,7 @@ Usage: `vdjpuzzle rna_seq_directory_name --bowtie-index=path_to_bt2_index/genome
 
 Note that --bowtie-index and --gtf parameters are mandatory. 
 
-rna_seq_directory_name contains the fastq files organized by single cell (i.e. one sub-directory for each cell that include the fastq files from that cell)
+rna_seq_directory_name contains the fastq files organized by single cell (i.e. one sub-directory for each cell that include the fastq files from that cell, check the structure of the Example directory)
 
 |parameter|description|
 | ------------- |-------------|
