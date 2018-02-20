@@ -10,7 +10,9 @@ To create the conda environment run `conda create --name vdjpuzzle --file enviro
 
 Type `source activate vdjpuzzle` to activate the environment. 
 
-Symlink or copy bin/vdjpuzzle into your path with the following command
+Symlink or copy bin/vdjpuzzle into your path by copying the following command in the .bashrc file in your home directory and substituting path_to_vdjpuzzle_dir with the absolute VDJPuzzle directory
+
+PATH=/path_to_vdjpuzzle_dir:$PATH
 
 VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). 
 
