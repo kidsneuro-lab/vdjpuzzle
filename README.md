@@ -49,7 +49,7 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 |parameter|description|
 | ------------- |-------------|
 |--help|show the help|
-|-g file|Gene annotation used for CuffNorm|
+|-g file|Gene annotation in the CuffNorm directory|
 |-f file|CuffNorm FPKM matrix|
 |-a file|Annotation file for each cell. First column contains cell ID|
 
