@@ -10,9 +10,14 @@ Type `source activate vdjpuzzle` to activate the environment.
 
 Symlink or copy bin/vdjpuzzle into your path, and run `nohup ./vdjpuzzle Example > LOG.txt &`.
 
+## Run VDJPuzzle with a different reference genome
+VDJPuzzle uses a BED file to locate the position of the VDJ genes in the genome. The BED files provided are built for the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml).
+If you would like to use a different reference genome, you can generate a new BED file using this [Python script](https://bitbucket.org/kirbyvisp/marmo/src/7cfeada825fb9a00d07ebe89a7e8599550b709f1/scripts/extract_receptors.py?at=master&fileviewer=file-view-default)
+
 ## Execution and parameters
 
-Usage: `./vdjpuzzle directory_name [option]`
+Usage: `./vdjpuzzle directory_name --bowtie-index=path\_to\_bt2\_index --gtf=path\_to\_gtf [option]`
+Note that --bowtie-index and --gtf parameters are mandatory.
 
 |parameter|description|
 | ------------- |-------------|
@@ -39,7 +44,6 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 |-g file|Gene annotation used for CuffNorm|
 |-f file|CuffNorm FPKM matrix|
 |-a file|Annotation file for each cell. First column contains cell ID|
-
 
 ## Citation
 
