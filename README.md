@@ -24,8 +24,11 @@ If you would like to use a different reference genome, you can generate a new BE
 
 ## Execution and parameters
 
-Usage: `vdjpuzzle directory_name --bowtie-index=path_to_bt2_index/genome_prefix --gtf=path_to_gene_annotations.gtf [option]`
-Note that --bowtie-index and --gtf parameters are mandatory.
+Usage: `vdjpuzzle rna_seq_directory_name --bowtie-index=path_to_bt2_index/genome_prefix --gtf=path_to_gene_annotations.gtf [option]`
+
+Note that --bowtie-index and --gtf parameters are mandatory. 
+
+rna_seq_directory_name contains the fastq files organized by single cell (i.e. one sub-directory for each cell that include the fastq files from that cell)
 
 |parameter|description|
 | ------------- |-------------|
