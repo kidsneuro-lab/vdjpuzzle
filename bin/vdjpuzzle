@@ -51,6 +51,7 @@ function printHelp {
 	>&2 echo -e "--trim\tTrim reads using Trimmomatic"
 	>&2 echo -e "--trim-galore\tTrim reads using Trim galore"
 	>&2 echo -e "--counts\tEnable featureCounts gene quantification measurements"
+	>&2 echo -e "--sra\tFastq files have been downloaded using SRA. Please ensure they have been downloaded using a command structure similar to the following: SRA_TOOLKIT/fastq-dump --defline-seq "'@$sn[_$rn]/$ri'" --split-files file.sra"
 }
 
 function testArg {
@@ -106,6 +107,7 @@ NOERRCORR=0
 NTHREADS=1
 USE_MIGMAP_DETAILS=1
 COUNTS=0
+SRA=0
 RUNTCR=1
 RUNR=1
 ORGANISM=human
@@ -130,6 +132,13 @@ do
 
 		--qsub)
 		QSUB=1
+		shift
+		;;
+
+		--sra)
+		SRA=1
+		echo -e "Assuming SRA files have been downloaded as follows:\n\n\tSRA_TOOLKIT/fastq-dump --defline-seq "'@$sn[_$rn]/$ri'" --split-files file.sra"
+		echo -e "\nThis is required for Trinity."
 		shift
 		;;
 
@@ -216,7 +225,7 @@ do
 		shift
 		;;
 
-    --gtf=*)
+		--gtf=*)
 		ANNOTATION="${i#*=}"
 		if [[ ! -f "${ANNOTATION}" || -z ${ANNOTATION+x} ]]; then
 			>&2 echo "Error: could not find GTF annotation at ${ANNOTATION}."
@@ -316,7 +325,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh
+			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh
 		fi
 		N=$((N+1))
 	done
@@ -335,7 +344,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG &
+			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA &
 		fi
 		N=$((N+1))
 	done

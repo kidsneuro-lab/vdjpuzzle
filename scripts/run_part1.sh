@@ -27,6 +27,8 @@ if [[ -n "$P3" ]]; then
 	param8=$P8
 	param9=$P9
 	param10=$P10
+	param11=$P11
+	param12=$P12
 else
 	param1=$1
 	param2=$2
@@ -38,6 +40,8 @@ else
 	param8=$8
 	param9=$9
 	param10=$10
+	param11=$11
+	param12=$12
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
@@ -76,7 +80,8 @@ P7: $param7
 P8: $param8
 P9: $param9
 P10: $param10
-P11: $param11"
+P11: $param11
+P12: $param12"
 
 echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
@@ -117,16 +122,26 @@ do
 
 	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -av "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
 	cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
-	grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
+	
+	if [[ $param12 -ge 1 ]] ; then	
+		# Because SRA has basic read ids, we need to use the whole read id to reduce the chance of that read id
+		# occuring in the quality score of a read.
+		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\@\g' | sed 's\$\/1\' > $Q3/overlapping_readsID.txt
+		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\@\g' | sed 's\$\/2\' >> $Q3/overlapping_readsID.txt
+		grep_x_param='-x'
+	else
+		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\\g' >> $Q3/overlapping_readsID.txt
+		grep_x_param=''
+	fi
 
 	# find fastq entries containing overlapping read IDs from either raw or trimmed fastq files
 	# get rid of pesky -- lines which appear for some reason using "^\-\-$"
 	if [ "$param6" -ge 1 ]; then # we are using trimmed reads
-		zcat $PAIR_1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $PAIR_2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F $grep_x_param | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $PAIR_2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F $grep_x_param | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	else
-		zcat $Q1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
-		zcat $Q2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q1 | grep -af $Q3/overlapping_readsID.txt -A 3 -F $grep_x_param | egrep -av "^\-\-$" > $Q3/out1${CHAIN_PREFIX_ARRAY[$index]}.fastq
+		zcat $Q2 | grep -af $Q3/overlapping_readsID.txt -A 3 -F $grep_x_param | egrep -av "^\-\-$" > $Q3/out2${CHAIN_PREFIX_ARRAY[$index]}.fastq
 	fi
 
 	# rebuild the trinity index
