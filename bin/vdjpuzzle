@@ -649,6 +649,8 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 		done
 	done
 
+	cd $CURDIR
+	
 	if [ "$RUNR" -ge 1 ]; then
 		index=0
 		for chain in "${CHAIN_ARRAY[@]}"
