@@ -623,7 +623,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 
 				samtools mpileup -uf reference.fasta alignment.bam |
 
-				bcftools call -c | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
+				bcftools call -c --skip-variants | python $SCRIPTS_DIR/mpileup2cons.py reference.fasta
 
 				echo "writing sequence to file ..."
 				cat new_reference.fasta >> $CORR_SEQ
