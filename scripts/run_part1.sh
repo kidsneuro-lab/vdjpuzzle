@@ -39,9 +39,9 @@ else
 	param7=$7
 	param8=$8
 	param9=$9
-	param10=$10
-	param11=$11
-	param12=$12
+	param10=${10}
+	param11=${11}
+	param12=${12}
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
