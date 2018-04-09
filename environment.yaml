@@ -27,7 +27,7 @@ dependencies:
 - samtools=1.4.1=0
 - slclust=02022010=1
 - subread=1.5.2=0
-- tbb=4.4_20150728=0
+- tbb=2018_20171205=0
 - tophat=2.1.1=py27_1
 - trimmomatic=0.36=3
 - trinity=2.4.0=3
