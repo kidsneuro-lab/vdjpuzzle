@@ -65,3 +65,7 @@ VDJPuzzle support the execution on a system with PBS scheduler by adding the --q
 ## Citation
 
 Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Bioinformatics, 2018
+
+## Contact
+
+If you have any problem running VDJPuzzle please contact Fabio Luciani (luciani@unsw.edu.au)
