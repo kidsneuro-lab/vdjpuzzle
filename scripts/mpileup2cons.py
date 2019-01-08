@@ -38,7 +38,7 @@ with open(original_ref) as f:
     original_seq = list("".join(reference_data[1:])) # as a single string then as a list of single nucleotides
     
 new_seq = original_seq[:]
-print("Processing sequence {0}".format(seq_name))
+#print("Processing sequence {0}".format(seq_name))
 for entry in all_changes:
     pos,old_nuc,new_nuc = entry
     assert original_seq[int(pos)-1] == old_nuc, "The positions of the required changes are not aligned with the original reference sequence."

@@ -1,12 +1,25 @@
-# VDJPuzzle2 - README #
+## VDJPuzzle_development
+
+This is a private repository for VDJPuzzle development
+
 
 TCR and BCR reconstruction from scRNA-seq data
+
+## ToDo
+
+
+## Current version update
+
+* [23/08/2018] added option to start from bam files
+* [22/08/2018] changed link to download kallisto in environment file
+* [15/08/2018] kallisto quantification
+* [22/09/2018] added isotype, membrane bound and expression
 
 ## Setup
 
 Download this repository and move into the VDJPuzzle directory. 
 
-To create the conda environment run `conda create --name vdjpuzzle --file environment-explicit.txt`. If you don't have conda installed, you can find it [here](https://conda.io/docs/user-guide/install/index.html). 
+To create the conda environment run `conda create --name vdjpuzzle --file environment-explicit.txt`. If you don't have conda installed, you can find it [here](https://conda.io/docs/user-guide/install/index.html). It is advised to use [miniconda3](https://conda.io/miniconda.html)
 
 Type `source activate vdjpuzzle` to activate the environment. 
 
@@ -47,6 +60,9 @@ rna_seq_directory_name contains the fastq files organized by single cell (i.e. o
 |--trim|Trim reads using Trimmomatic|
 |--counts|Enable featureCounts gene quantification measurements|
 |--bowtie-index=path\_to\_bt2\_index|Location of the bowtie index files including the prefix (e.g. /path/to/bt2/genome)|
+|--noquant\tStops TCR/BCR quantification step and reports multiple chains|
+|--star-index=path\_to\_star_index| star index directory 
+|--align=star\_if star aligner is used instead of tophat|
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
 
 An additional script to plot gene expression as an heatmap annotated with mutation rates and other phenotype data is provided in scripts/mutation\_gene\_expression\_analysis.R
@@ -58,14 +74,15 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 |-f file|CuffNorm FPKM matrix|
 |-a file|Annotation file for each cell. First column contains cell ID|
 
+## how cellIDs are extracted (important when bam files are given as input)
+
+
 ## Run VDJPuzzle on a cluster
 VDJPuzzle support the execution on a system with PBS scheduler by adding the --qsub option. Every system has different parameters, thus make sure to change these parameters at the beginning of the .sh files in the script directory. 
 
 
 ## Citation
 
-Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Bioinformatics, 2018
+Manuscript is under review, in the meantime you can cite our biorxiv:
+Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Biorxiv, 2017
 
-## Contact
-
-If you have any problem running VDJPuzzle please contact Fabio Luciani (luciani@unsw.edu.au)

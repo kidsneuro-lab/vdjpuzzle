@@ -4,8 +4,8 @@
 import sys
 
 if len(sys.argv) != 3:
-	print "Incorrect number of arguments."
-	print "Usage: python extract_fasta.py <NameOfSequenceWith> <FastaOfSequences>"
+	#print "Incorrect number of arguments."
+	#print "Usage: python extract_fasta.py <NameOfSequenceWith> <FastaOfSequences>"
 	sys.exit
 
 input_name = sys.argv[1]

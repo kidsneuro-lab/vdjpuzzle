@@ -18,7 +18,7 @@ set -x # echo on, command fails causes script to exit, pipes fail
 #parameter one needs to be the ABSOLUTE path where cell sequences are located WITHOUT /
 if [[ -n "$P3" ]]; then
 	param1=$P1
-	param2=$P2
+	param2=$P2 #filename aka cellID
 	param3=$P3
 	param4=$P4
 	param5=$P5
@@ -29,6 +29,9 @@ if [[ -n "$P3" ]]; then
 	param10=$P10
 	param11=$P11
 	param12=$P12
+	param13=$P13 # it is a [1,0] paramter indicating if bam files are used as input
+	param14=$P14 # indicates bam files location
+	
 else
 	param1=$1
 	param2=$2
@@ -42,6 +45,10 @@ else
 	param10=${10}
 	param11=${11}
 	param12=${12}
+	param13=${13}
+	param14=${14}
+		
+	
 fi
 
 # if PATH_PARAM has been passed to the script, then set PATH
@@ -52,7 +59,7 @@ fi
 
 CELL_PATH=$param1
 
-FNAME1=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R1_001|R1|1)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` # ${CELL_PATH}/${param2}1.fastq.gz"
+FNAME1=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R1_001|R1|1)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}1.fastq.gz"
 FNAME2=`find -L ${CELL_PATH} -name "*fastq.gz" | egrep ".+_(R2_001|R2|2)\.fastq\.gz" | grep -v "PAIRED" | xargs basename` #"${CELL_PATH}/${param2}2.fastq.gz"
 Q1=${CELL_PATH}/$FNAME1
 Q2=${CELL_PATH}/$FNAME2
@@ -69,6 +76,9 @@ do
 done
 mkdir -p $Q3
 mkdir -p $Q3/out
+if [ "$ALIGNER" == "star" ]; then
+	mkdir -p $Q3/out/star_both
+fi
 
 echo "P1: $param1
 P2: $param2
@@ -81,18 +91,40 @@ P8: $param8
 P9: $param9
 P10: $param10
 P11: $param11
-P12: $param12"
+P12: $param12
+P13: $param13
+P14: $param14"
 
-echo "$TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath $BOWTIE_INDEX ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
+echo "$BOWTIE_INDEX $FASTA $ALIGNER $TOPHAT $BEDTOOLS $SAMTOOLS $trinitypath ${CHAIN_ARRAY[*]} ${CHAIN_PREFIX_ARRAY[*]}"
 
-if [ "$param6" -ge 1 ]; then
+#
+if [ "$param13" -ge 1 ]; then
+	#alignment is already performed before VDJPuzzle and input files are provided
+	echo "fiding bam files"
+	BAMFILE=$(find $param14 -name '*.bam' -type f | grep $param2) #find all aligments and grep the one corresponding to the cell
+	echo "$BAMFILE"
+
+elif [ "$param6" -ge 1 ]; then
         PAIR_1="${CELL_PATH}/PAIRED_${FNAME1}"
         PAIR_2="${CELL_PATH}/PAIRED_${FNAME2}"
         UNPAIR_1="${CELL_PATH}/UNPAIRED_${FNAME1}"
         UNPAIR_2="${CELL_PATH}/UNPAIRED_${FNAME2}"
 
         trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
-        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+
+	if [ "$ALIGNER" == "star" ]; then
+	         #/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir $STAR_INDEX --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99
+		 cd $Q3/out/star_both 
+		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
+		cd $param4
+		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
+		
+	else
+		tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+		BAMFILE=$Q3/out/tophat_both/accepted_hits.bam
+		#rm $Q3/out/tophat_both/unmapped.bam
+	fi
+
 elif [ "$param11" -ge 1 ]; then
         echo "Trimming with trim-galore"
         filename1="${FNAME1%.*}"
@@ -103,25 +135,56 @@ elif [ "$param11" -ge 1 ]; then
         PAIR_1="${CELL_PATH}/${filename1}_val_1.fq.gz"
         PAIR_2="${CELL_PATH}/${filename2}_val_2.fq.gz"
         echo $PAIR_1
-        trim_galore --paired -o "${CELL_PATH}" $Q1 $Q2
-        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+        /g/data1a/va1/mg8610/trim-galore/bin/trim_galore --paired -o "${CELL_PATH}" $Q1 $Q2 #this is hardcoded
+	if [[ "$ALIGNER" == "star" ]]; then
+		#/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir  $param4/star_index --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99
+		cd $Q3/out/star_both
+		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM 
+		cd $param4
+		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
+	else
+		tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $PAIR_1 $PAIR_2
+		BAMFILE=$Q3/out/tophat_both/accepted_hits.bam
+		#rm $Q3/out/tophat_both/unmapped.bam
+	fi
 else
-        tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
+        if [ "$ALIGNER" == "star" ]; then
+		#/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir  $param4/star_index --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99	
+		cd $Q3/out/star_both
+		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $Q1 $Q2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
+		cd $param4
+		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
+	else
+		tophat -o $Q3/out/tophat_both -p $param9 $BOWTIE_INDEX $Q1 $Q2
+		BAMFILE=$Q3/out/tophat_both/accepted_hits.bam
+	#rm $Q3/out/tophat_both/unmapped.bam
+	fi
 fi
 
 if [ "$param5" -ge 1 ]; then
-	cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $Q3/out/tophat_both/accepted_hits.bam
+	if [ "$ALIGNER" == "star" ]; then
+		cuffquant -o $CUFFOUTPUT/$param2 --library-type fr-firststrand $ANNOTATION  $BAMFILE
+	else
+		cuffquant -o $CUFFOUTPUT/$param2 $ANNOTATION  $BAMFILE
+    fi
 fi
+
 
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
 do
 	echo $chain
 	echo ${!chain}
-	intersectBed -wa -abam $Q3/out/tophat_both/accepted_hits.bam -b ${!chain} > $Q3/out/tophat_both/overlapping_reads.bam
+	if [ "$ALIGNER" == "star" ]; then
+		intersectBed -wa -abam $BAMFILE -b ${!chain} > $Q3/overlapping_reads.bam
+		samtools view -h $Q3/overlapping_reads.bam | grep -av "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
+		#cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
+	else
+		intersectBed -wa -abam $BAMFILE -b ${!chain} > $Q3/overlapping_reads.bam
+        samtools view -h $Q3/overlapping_reads.bam | grep -av "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
+	fi
 
-	samtools view -h $Q3/out/tophat_both/overlapping_reads.bam | grep -av "^@" | awk '{print "@"$1"\n"$10"\n+\n"$11}' > $Q3/overlapping_reads.fq
-	cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa
+        cat $Q3/overlapping_reads.fq | awk 'NR%4==1{printf ">%s\n", substr($0,2)}NR%4==2{print}' > $Q3/overlapping_reads.fa	
 	
 	if [[ $param12 -ge 1 ]] ; then	
 		# Because SRA has basic read ids, we need to use the whole read id to reduce the chance of that read id
@@ -130,7 +193,7 @@ do
 		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\@\g' | sed 's\$\/2\' >> $Q3/overlapping_readsID.txt
 		grep_x_param='-x'
 	else
-		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\\g' >> $Q3/overlapping_readsID.txt
+		grep -a ">" $Q3/overlapping_reads.fa | sed 's\>\\g' > $Q3/overlapping_readsID.txt
 		grep_x_param=''
 	fi
 

@@ -17,7 +17,7 @@ done
 BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SCRIPTS_DIR=$BIN_DIR/../scripts
 SHARE_DIR=$BIN_DIR/../share
-
+DB_DIR=$BIN_DIR/../db
 
 # If conda_prefix has not been setup, then we are not in the vdjpuzzle environment and need to activate it.
 if [[ -z ${CONDA_PREFIX+x} ]]; then
@@ -37,19 +37,19 @@ fi
 >&2 echo "Running on date: " `date`
 
 function printHelp {
-	>&2 echo "VDJPuzzle v2.0"
-	>&2 echo "Usage: ./vdjpuzzle directory_name --bowtie-index=/path/to/index/index_prefix --gtf=/path/to/gtf_file.gtf [options]"
+	>&2 echo "VDJPuzzle v3.0"
+	>&2 echo "Usage: ./vdjpuzzle directory_name --star-index=/path/index/folder --bowtie-index=/path/to/index/index_prefix --gtf=/path/to/gtf_file.gtf [options]"
 	>&2 echo -e "--qsub\texecutes on the cluster (overrides --CPU flag)"
 	>&2 echo -e "--type=(t|b)\tspecifies tcell (default) or bcell analysis"
 	>&2 echo -e "--CPU=n\truns with n processes"
 	>&2 echo -e "--THR=n\truns bowtie and tophat with n threads (default 8)"
 	>&2 echo -e "--species=(human|mouse)\tspecified human (default) or mouse organism"
+	>&2 echo -e "--align=(bowtie|star)\tspecify aligner  and star-index find if this option is used; TOPHAT as default aligner"
 	>&2 echo -e "--no-err-corr\tDo not perform final error correction on consensus sequence"
 	>&2 echo -e "--only-statistics\tExecutes only summary statistics script"
 	>&2 echo -e "--no-statistics\tDo not execute summary statistics script"
 	>&2 echo -e "--transcriptomic\tEnable cuffquant/cuffnorm gene quantification measurements"
 	>&2 echo -e "--trim\tTrim reads using Trimmomatic"
-	>&2 echo -e "--trim-galore\tTrim reads using Trim galore"
 	>&2 echo -e "--counts\tEnable featureCounts gene quantification measurements"
 	>&2 echo -e "--sra\tFastq files have been downloaded using SRA. Please ensure they have been downloaded using a command structure similar to the following: SRA_TOOLKIT/fastq-dump --defline-seq "'@$sn[_$rn]/$ri'" --split-files file.sra"
 }
@@ -82,6 +82,7 @@ export BOWTIEBUILD=`which bowtie2-build` # /apps/bowtie2/2.1.0/bowtie2-build
 export SAMTOOLS=`which samtools` # /apps/samtools/0.1.18/bin/samtools
 export BEDTOOLS=`which intersectBed` # /apps/bedtools/2.26.0/bin/intersectBed
 export featureCounts=`which featureCounts` # /short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
+export kallisto=`which kallisto` # /short/va1/fzl561/scRNAseq/Tools/subread/subread-1.5.1-Linux-x86_64/bin/featureCounts
 if [[ ! -z ${CONDA_PREFIX+x} ]]; then
 	export TRIMMOMATIC=`which trimmomatic` # /short/va1/fzl561/scRNAseq/Tools/Trimmomatic-0.36/trimmomatic-0.36.jar
 else
@@ -104,7 +105,7 @@ export AVGQUAL=20
 #SET DEFAULT PARAMETERS
 PARALLEL=1
 NOERRCORR=0
-NTHREADS=1
+NTHREADS=8
 USE_MIGMAP_DETAILS=1
 COUNTS=0
 SRA=0
@@ -116,7 +117,9 @@ TRIMG=0
 QSUB=0
 TRANSCRIPTOMIC=0
 TYPE='t'
-
+ALIGNER='bowtie'
+QUANT=0
+INPUTBAM=0
 # make log directory
 mkdir -p log
 
@@ -148,6 +151,17 @@ do
 			printHelp
 			exit
 		fi
+		shift
+		;;
+		
+		--align=*)
+		ALIGNER="${i#*=}"
+		if [[ "$(testArg $ALIGNER '(bowtie|star)')" != "true" ]]; then 
+			>&2 echo "Error: Aligner not matched"
+			printHelp
+			exit 1
+		fi
+		export ALIGNER
 		shift
 		;;
 
@@ -183,6 +197,12 @@ do
 		shift
 		;;
 
+		--bamfiles=*)
+		BAMFILES="${i#*=}"
+		INPUTBAM=1
+		shift
+		;;
+
 		--no-err-corr)
 		NOERRCORR=1
 		shift
@@ -195,11 +215,6 @@ do
 
 		--trim)
 		TRIM=1
-		shift
-		;;
-
-		--trim-galore)
-		TRIMG=1
 		shift
 		;;
 
@@ -225,6 +240,18 @@ do
 		shift
 		;;
 
+		--star-index=*)
+                STAR_INDEX="${i#*=}"
+                if [[ ! -d "$STAR_INDEX" ]]; then
+                        >&2 echo "Error: could not find star-index directory at ${STAR_INDEX}"
+                        printHelp
+                        exit 1
+                fi
+                export STAR_INDEX
+                shift
+                ;;
+
+
 		--gtf=*)
 		ANNOTATION="${i#*=}"
 		if [[ ! -f "${ANNOTATION}" || -z ${ANNOTATION+x} ]]; then
@@ -237,8 +264,9 @@ do
 		shift
 		;;
 
-		*)
 
+
+		*)
 		if [[ ! -d "$i" ]]; then
 			echo "Invalid SC_RNA_SEQ directory: $i"
 			printHelp
@@ -257,9 +285,19 @@ if [[ -z "$RNADIR" ]]; then
 	exit 1
 fi
 
-if [[ -z "$BOWTIE_INDEX" ]]; then
-	echo "No bowtie index path provided, please specify one with the option --bowtie-index=/path/to/index/index_prefix"
+if [[ $ALIGNER = 'star' ]]; 
+then
+	if [[ -z "$STAR_INDEX" ]]; then
+       	echo "No star-index path folder provided, please specify one with the option --fasta=/path/index/star/folder."
+        printHelp
+       	exit 1
+	fi
+else	
+	if [[ -z "$BOWTIE_INDEX" ]]; then
+	echo "No index path provided, please specify one with the option --bowtie-index=/path/to/index/index_prefix"
+	printHelp
 	exit 1
+	fi
 fi
 
 if [[ -z "$ANNOTATION" ]]; then
@@ -269,8 +307,8 @@ fi
 
 #CONFIGURE REFERENCE PATHS
 if [ "$TYPE" == "t" ]; then
-	CHAIN_ARRAY=('TCRA' 'TCRB')
-	CHAIN_PREFIX_ARRAY=('a' 'b')
+	CHAIN_ARRAY=('TCRA' 'TCRB' 'TCRD' 'TCRG')
+	CHAIN_PREFIX_ARRAY=('a' 'b' 'c' 'd')
 else
 	CHAIN_ARRAY=('IGH' 'IGK' 'IGL')
 	CHAIN_PREFIX_ARRAY=('h' 'k' 'l')
@@ -293,6 +331,7 @@ runtcr = $RUNTCR
 runr = $RUNR
 trim = $TRIM
 type = $TYPE
+align = $ALIGNER
 transcriptomic = $TRANSCRIPTOMIC
 chain_array = ${CHAIN_ARRAY[*]}
 chain_prefix_array = ${CHAIN_PREFIX_ARRAY[*]}"
@@ -325,7 +364,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-			qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh
+				qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,P13=$INPUTBAM,P14=$BAMFILES,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh			
 		fi
 		N=$((N+1))
 	done
@@ -344,7 +383,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA &
+			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA $INPUTBAM $BAMFILES &
 		fi
 		N=$((N+1))
 	done
@@ -352,7 +391,7 @@ else
 fi
 
 if [ "$TRANSCRIPTOMIC" -ge 1 ]; then
-	find "$CUFFOUTPUT"/* -type d -exec echo -ne "{}/abundances.cxb\t" \; -exec sh -c "echo {} | sed 's/.*\///'" \; >> $CUFFOUTPUT/sample_sheet.txt
+	find $CUFFOUTPUT/* -name "*.cxb" -type f -exec echo -ne "{}\t" \; -exec sh -c 'echo $(basename $(dirname "{}") )' \; >> $CUFFOUTPUT/sample_sheet.txt
 	if [[ $QSUB -ge 1 ]] ; then
 		qsub -N "pcuff_${TYPE}_cuffnorm" -e "log/pcuff_${TYPE}_cuffnorm.err" -o "log/pcuff_${TYPE}_cuffnorm.out" -V -v ANNOTATION=$ANNOTATION,CUFFOUTPUT=$CUFFOUTPUT,PATH_PARAM=$PATH $SCRIPTS_DIR/run_cuffnorm.sh
 	else
@@ -499,7 +538,7 @@ do
 	do 
 		if [[ $(cat $file | wc -l) -gt 1 ]]; then
 			echo "mv $file summary/" >> mv${RECEPTOR_ABBREV}.sh
-			echo "mv preliminary/$(basename $file | sed 's/^\(TRA\|TRB\|IGH\|IGK\|IGL\)_/VDJ_p1_/')/$chain.fa ${RECEPTOR_ABBREV}sequences/$(basename $file | sed 's/^\(TRA\|TRB\|IGH\|IGK\|IGL\)_/VDJ_p3_/')/$chain.fa" >> mv${RECEPTOR_ABBREV}.sh
+			echo "mv preliminary/$(basename $file | sed 's/^\(TRA\|TRB\|TRD\|TRG\|IGH\|IGK\|IGL\)_/VDJ_p1_/')/$chain.fa ${RECEPTOR_ABBREV}sequences/$(basename $file | sed 's/^\(TRA\|TRB\|TRD\|TRG\|IGH\|IGK\|IGL\)_/VDJ_p3_/')/$chain.fa" >> mv${RECEPTOR_ABBREV}.sh
 		fi
 	done
 done
@@ -557,7 +596,19 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			echo "summary_corrected directory already exits, removing it"
 			rm -vr "$CURDIR/summary_corrected"
     fi
-	mkdir "$CURDIR/summary_corrected"
+			mkdir "$CURDIR/summary_corrected"
+    if [[ -e "$CURDIR/kallisto" ]]
+    then
+                        echo "kallisto directory already exits, removing it"
+                        rm -vr "$CURDIR/kallisto"
+    fi
+    			mkdir "$CURDIR/kallisto"
+    if [[ -e "$CURDIR/blast" ]]
+    then
+                        echo "blast directory already exits, removing it"
+                        rm -vr "$CURDIR/blast"
+    fi
+    		        mkdir "$CURDIR/blast"
 
 	echo -e "CellID\tSequence name\t#reads" > "$CURDIR/${RECEPTOR_ABBREV}_expression.tsv"
 	for chain in "${CHAIN_ARRAY[@]}"
@@ -638,13 +689,33 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 
 			done <accepted_seq_names.txt
 			rm -vf accepted_seq_names.txt
+			
+			FASTQ1=`find -L $RNADIR/$(basename $cell | sed 's/^VDJ_p3_//g')/ -name "*.fastq.gz" | egrep ".+_(R1_001|R1|1)\.fastq\.gz" | grep -v "PAIRED"` #Input FASTQ_1 sequence
+			FASTQ2=`find -L $RNADIR/$(basename $cell | sed 's/^VDJ_p3_//g')/ -name "*.fastq.gz" | egrep ".+_(R2_001|R2|2)\.fastq\.gz" | grep -v "PAIRED"` # Input FASTQ2 sequence
+			#FQ1=${di}/$FASTQ1
+			#FQ2=${di}/$FASTQ2 
+			echo "$FASTQ1"
+			echo "$FASTQ2"	
+			mkdir $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+			
+			echo "kallisto index -i $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index $CORR_SEQ"
+			echo "kallisto quant -i  $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index -o $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out $FASTQ1 $FASTQ2"
+			#Running kallisto for index and quantification analysis
+			kallisto index -i $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index $CORR_SEQ
+            kallisto quant -i  $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index -o $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out $FASTQ1 $FASTQ2
 
+			HEAD_SEQ=`sort -g -k 5,5rn $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/abundance.tsv | awk '{print $1}' | sed -n '1p'` #Highest TPM FASTA Header 
+			samtools faidx $CORR_SEQ $HEAD_SEQ > $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/${HEAD_SEQ}.fa #GET FASTA SEQ FOR HIGHEST QUANTIFIED TRANSCRIPT NUCLEOTIDE
+			mv $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/${HEAD_SEQ}.fa $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/$(basename $cell | sed 's/^VDJ_p3_//g').fa
+		    blastn -query $CORR_SEQ -db $DB_DIR/${chain//C}_${ORGANISM}.fa -outfmt 7 > $CURDIR/blast/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g').out
+		    nhmmer -E 0.0001 --tblout $CURDIR/blast/IGH_$(basename $cell | sed 's/^VDJ_p3_//g')_membrane.out $DB_DIR/membrane_${ORGANISM}.hmm $OUTPUT/$(basename $cell)/new_IGH.fa  
+			
 			if [[ $USE_MIGMAP_DETAILS -ge 1 ]] ; then 
-				migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+			migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
 			else
-				migmap -S $ORGANISM -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
+				migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
 			fi
-
+			 
 			echo "Done, moving to next cell"
 		done
 	done
@@ -688,6 +759,11 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 	fi
 fi
 
+#generate n reads file
 
+find $RNADIR -name "PAIRED*1.fastq*" -type f -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this need to be fixed, It might cause problem without trim
+find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
+paste cellID.csv readcounts.csv > nreads.csv
+python $SCRIPTS_DIR/merge_results.py
 echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary_corrected directory."
 echo `date`
