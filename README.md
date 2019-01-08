@@ -1,19 +1,17 @@
-## VDJPuzzle_development
+## VDJPuzzle
 
-This is a private repository for VDJPuzzle development
 
 
 TCR and BCR reconstruction from scRNA-seq data
 
-## ToDo
 
+## Latest version update
 
-## Current version update
-
-* [23/08/2018] added option to start from bam files
-* [22/08/2018] changed link to download kallisto in environment file
-* [15/08/2018] kallisto quantification
-* [22/09/2018] added isotype, membrane bound and expression
+* added option to start from bam files
+* TCR and BCR expression quantification
+* kallisto quantification
+* Isotype, 
+* membrane bound vs secreted calling
 
 ## Setup
 
@@ -64,6 +62,7 @@ rna_seq_directory_name contains the fastq files organized by single cell (i.e. o
 |--star-index=path\_to\_star_index| star index directory 
 |--align=star\_if star aligner is used instead of tophat|
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
+|--bam=path\_to\bam_files\|Location of bam files. Bam Files should contains the cellIDs in the input RNA-seq data or be organized in folders with the same name of the cellIDs|
 
 An additional script to plot gene expression as an heatmap annotated with mutation rates and other phenotype data is provided in scripts/mutation\_gene\_expression\_analysis.R
 
@@ -83,6 +82,9 @@ VDJPuzzle support the execution on a system with PBS scheduler by adding the --q
 
 ## Citation
 
-Manuscript is under review, in the meantime you can cite our biorxiv:
-Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Biorxiv, 2017
+VDJPuzzle 2.0:
+Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Bioinformatics, Volume 34, Issue 16, 15 August 2018, Pages 2846–2847, https://doi.org/10.1093/bioinformatics/bty203
+
+VDJPuzzle 3.0:
+Manuscript in preparation
 
