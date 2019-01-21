@@ -1,4 +1,4 @@
-## VDJPuzzle
+## VDJPuzzle 
 
 
 
@@ -10,7 +10,7 @@ TCR and BCR reconstruction from scRNA-seq data
 * added option to start from bam files
 * TCR and BCR expression quantification
 * kallisto quantification
-* Isotype, 
+* Isotype Identification 
 * membrane bound vs secreted calling
 
 ## Setup
@@ -58,7 +58,6 @@ rna_seq_directory_name contains the fastq files organized by single cell (i.e. o
 |--trim|Trim reads using Trimmomatic|
 |--counts|Enable featureCounts gene quantification measurements|
 |--bowtie-index=path\_to\_bt2\_index|Location of the bowtie index files including the prefix (e.g. /path/to/bt2/genome)|
-|--noquant\tStops TCR/BCR quantification step and reports multiple chains|
 |--star-index=path\_to\_star_index| star index directory 
 |--align=star\_if star aligner is used instead of tophat|
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
