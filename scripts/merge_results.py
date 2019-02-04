@@ -42,7 +42,7 @@ for f in files:
     with open(f[1], 'r') as receptorFile:
         linecount=0
         extraCSV=open(f[1]+".extra", 'w')
-        extraCSV.write("\tIsotype/Constant\tMembrane/Secreted\tExpression\n")
+        extraCSV.write("Isotype/Constant\tMembrane/Secreted\tExpression\n")
         for line in receptorFile:
             linecount+=1
             if linecount>1:
@@ -53,11 +53,18 @@ for f in files:
                 cellID=cellID[4::]
                 #find constant
                 blastfile="blast/"+f[0]+"_"+cellID+".out"
+                hmmfile="blast/IGH_"+cellID+"membrane.out"
                 constant=""
                 max_identity=0
                 mem_sec="NA"
                 if f[0]=="IGH":
                     mem_sec="Secreted"
+                    hasIGH=os.path.isfile(hmmfile) 
+                    if hasIGH:
+                        with open(hmmfile, 'r') as hmmOutput:
+                            for line3 in hmmOutput:
+                                if seqID in line3:
+                                    mem_sec="Membrane"
                 if os.path.isfile(blastfile):
                     with open(blastfile, 'r') as blastOutput:
                         for line2 in blastOutput:
@@ -65,9 +72,8 @@ for f in files:
                                 token=line2.split('\t')
                                 identity=float(token[2])
                                 if (token[0]==seqID) and (max_identity<identity):
+                                    max_identity=identity
                                     constant=token[1].split('|')[1]
-                                    if ("_M" in token[1].split('|')[0]) and (f[0]=="IGH"): #grepl("_M", token[1].split('|')[0]):
-                                        mem_sec="Membrane-bound"
                 #find expression
                 expressionfile="kallisto/"+f[0]+"_"+cellID+"/"+f[0]+"_out/abundance.tsv"
                 tpm="0"
@@ -79,15 +85,10 @@ for f in files:
                                 if (token[0]==seqID) and (tpm=="0"):
                                     rpm=float(token[3].replace("\n",""))/(Nreads[cellID]/1000000) 
                                     rpkm=rpm/(float(token[2].replace("\n","")))
-                extraCSV.write("\t"+constant+"\t"+mem_sec+"\t"+str(rpkm)+"\n")
+                extraCSV.write(constant+"\t"+mem_sec+"\t"+str(rpkm)+"\n")
         extraCSV.flush()
         extraCSV.close()
     cmd="paste "+f[1]+" "+f[1]+".extra > "+f[1]+".final"
     os.system(cmd)
     os.system("mv "+f[1]+".final "+f[1])
 os.system("rm summary_corrected/*.extra")
-
-
-
-
-

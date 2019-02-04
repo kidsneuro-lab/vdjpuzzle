@@ -135,7 +135,7 @@ elif [ "$param11" -ge 1 ]; then
         PAIR_1="${CELL_PATH}/${filename1}_val_1.fq.gz"
         PAIR_2="${CELL_PATH}/${filename2}_val_2.fq.gz"
         echo $PAIR_1
-        /g/data1a/va1/mg8610/trim-galore/bin/trim_galore --paired -o "${CELL_PATH}" $Q1 $Q2 #this is hardcoded
+        trim_galore --paired -o "${CELL_PATH}" $Q1 $Q2 #this is hardcoded
 	if [[ "$ALIGNER" == "star" ]]; then
 		#/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir  $param4/star_index --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99
 		cd $Q3/out/star_both
