@@ -701,14 +701,14 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			echo "kallisto index -i $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index $CORR_SEQ"
 			echo "kallisto quant -i  $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index -o $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out $FASTQ1 $FASTQ2"
 			#Running kallisto for index and quantification analysis
-			/g/data1a/va1/mg8610/kallisto_linux-v0.44.0/kallisto index -i $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index $CORR_SEQ
-            /g/data1a/va1/mg8610/kallisto_linux-v0.44.0/kallisto quant -i  $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index -o $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out $FASTQ1 $FASTQ2
+			kallisto index -i $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index $CORR_SEQ
+            		kallisto quant -i  $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}.index -o $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out $FASTQ1 $FASTQ2
 
 			HEAD_SEQ=`sort -g -k 5,5rn $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/abundance.tsv | awk '{print $1}' | sed -n '1p'` #Highest TPM FASTA Header 
 			samtools faidx $CORR_SEQ $HEAD_SEQ > $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/${HEAD_SEQ}.fa #GET FASTA SEQ FOR HIGHEST QUANTIFIED TRANSCRIPT NUCLEOTIDE
 			mv $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/${HEAD_SEQ}.fa $CURDIR/kallisto/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')/${chain//C}_out/$(basename $cell | sed 's/^VDJ_p3_//g').fa
 		    blastn -query $CORR_SEQ -db $DB_DIR/${chain//C}_${ORGANISM}.fa -outfmt 7 > $CURDIR/blast/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g').out
-		    /g/data1a/va1/mg8610/hmmer-3.1b2/src/nhmmer -E 0.0001 --tblout $CURDIR/blast/IGH_$(basename $cell | sed 's/^VDJ_p3_//g')membrane.out $DB_DIR/membrane_${ORGANISM}.hmm $OUTPUT/$(basename $cell)/new_IGH.fa  
+		    nhmmer -E 0.0001 --tblout $CURDIR/blast/IGH_$(basename $cell | sed 's/^VDJ_p3_//g')membrane.out $DB_DIR/membrane_${ORGANISM}.hmm $OUTPUT/$(basename $cell)/new_IGH.fa  
 			
 			if [[ $USE_MIGMAP_DETAILS -ge 1 ]] ; then 
 			migmap -S $ORGANISM --by-read -R ${chain//C} --data-dir=$CONDA_PREFIX/share/igblast --details fr1nt,cdr1nt,fr2nt,cdr2nt,fr3nt,fr4nt $CORR_SEQ $CURDIR/summary_corrected/${chain//C}_$(basename $cell | sed 's/^VDJ_p3_//g')
