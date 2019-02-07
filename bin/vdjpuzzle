@@ -749,7 +749,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			cat summary_corrected/header${index}.txt summary_corrected/${chain//C}tmp.txt > summary_corrected/single_cells_${chain//C}.txt
 			echo "CellID" > summary_corrected/single_cells_ID_${chain//C}.txt
 			cat summary_corrected/${chain//C}_cells.txt >> summary_corrected/single_cells_ID_${chain//C}.txt
-			paste -d"\t" summary_corrected/single_cells_ID_${chain//C}.txt summary_corrected/single_cells_${chain//C}.txt > summary_corrected/${chain//C}.tsc
+			paste -d"\t" summary_corrected/single_cells_ID_${chain//C}.txt summary_corrected/single_cells_${chain//C}.txt > summary_corrected/${chain//C}.tsv
 			rm summary_corrected/h${index}.txt
 			rm summary_corrected/header${index}.txt
 			rm summary_corrected/${chain//C}tmp.txt
