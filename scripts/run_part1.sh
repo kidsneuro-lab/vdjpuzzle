@@ -112,10 +112,10 @@ elif [ "$param6" -ge 1 ]; then
 
         trimmomatic PE -phred33 $Q1 $Q2 $PAIR_1 $UNPAIR_1 $PAIR_2 $UNPAIR_2 ILLUMINACLIP:$ADAPTERS:2:30:10 LEADING:$LEADING TRAILING:$TRAILING SLIDINGWINDOW:$WINDOW_LEN:$WINDOW_QUAL MINLEN:$MINLEN > $CELL_PATH/log_trimmometric.txtfi
 
-	if [ "$ALIGNER" == "star" ]; then
+	if [[ "$ALIGNER" == "star" ]]; then
 	         #/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir $STAR_INDEX --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99
 		 cd $Q3/out/star_both 
-		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
+		STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
 		cd $param4
 		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
 		
@@ -139,7 +139,7 @@ elif [ "$param11" -ge 1 ]; then
 	if [[ "$ALIGNER" == "star" ]]; then
 		#/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir  $param4/star_index --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99
 		cd $Q3/out/star_both
-		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM 
+		STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $PAIR_1 $PAIR_2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM 
 		cd $param4
 		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
 	else
@@ -148,10 +148,10 @@ elif [ "$param11" -ge 1 ]; then
 		#rm $Q3/out/tophat_both/unmapped.bam
 	fi
 else
-        if [ "$ALIGNER" == "star" ]; then
+        if [[ "$ALIGNER" == "star" ]]; then
 		#/data/STAR-master/source/STAR --runThreadN $param9 --runMode genomeGenerate --genomeDir  $param4/star_index --genomeFastaFiles  $FASTA --sjdbGTFfile $ANNOTATION  --sjdbOverhang 99	
 		cd $Q3/out/star_both
-		/data/STAR-master/source/STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $Q1 $Q2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
+		STAR --genomeDir $STAR_INDEX --runThreadN $param9 --readFilesCommand zcat --readFilesIn $Q1 $Q2 --outSAMtype BAM SortedByCoordinate --outSAMstrandField intronMotif --outFilterType BySJout  --outSAMmode Full --outSAMunmapped Within --outFilterIntronMotifs RemoveNoncanonicalUnannotated --sjdbGTFfile $ANNOTATION --sjdbGTFfeatureExon exon --quantMode TranscriptomeSAM
 		cd $param4
 		BAMFILE=$Q3/out/star_both/Aligned.sortedByCoord.out.bam
 	else
