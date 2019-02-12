@@ -769,6 +769,6 @@ fi
 find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
 paste cellID.csv readcounts.csv > nreads.csv
 python $SCRIPTS_DIR/merge_results.py
-mv summary_corrected/${chain//C}.csv summary_corrected/${chain//C}.tsv
+#mv summary_corrected/${chain//C}.csv summary_corrected/${chain//C}.tsv
 echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary_corrected directory."
 echo `date`
