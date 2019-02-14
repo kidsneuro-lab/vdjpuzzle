@@ -585,7 +585,7 @@ if [ "$RUNR" -ge 1 ]; then
 		rm summary/single_cells_ID_${chain//C}.txt
 		index=$((index+1))
 	done
-	rm final_receptor_results
+	rm -rf final_receptor_results
 	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
 fi
 
@@ -762,7 +762,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			rm summary_corrected/single_cells_ID_${chain//C}.txt
 			index=$((index+1))
 		done
-		rm final_receptor_results
+		rm -rf final_receptor_results
 		python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
 	fi
 fi
