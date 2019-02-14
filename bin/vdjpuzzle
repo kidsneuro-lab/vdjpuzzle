@@ -364,7 +364,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-				qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,P13=$INPUTBAM,P14=$BAMFILES,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh			
+				qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,P13=$INPUTBAM,P14=$BAMFILES,P15=$N,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part_1_and_2.sh			
 		fi
 		N=$((N+1))
 	done
@@ -383,7 +383,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA $INPUTBAM $BAMFILES &
+			$SCRIPTS_DIR/run_part_1_and_2.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA $INPUTBAM $BAMFILES $N &
 		fi
 		N=$((N+1))
 	done
@@ -416,56 +416,60 @@ fi
 
 echo "PART 1 COMPLETE: Preliminary $RECEPTOR_ABBREV repertoire reconstructed."
 
-echo "STARTING PART 2: Building a new reference geonme based on the preliminary repertoire"
-#PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
-for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
-do
-	if [[ -f all_sequences_${chain_prefix}.fa ]]; then
-		rm -f all_sequences_${chain_prefix}.fa
-	fi;
-done
-
-if [[ $QSUB -ge 1 ]] ; then
-	N=1
-	for d in $PWD/preliminary/*
-	do
-		echo $d
-		di=${d%%/};
-		echo $di
-		nfiles=$(find -L $di/*fastq* -type f | wc -l)
-		if [ "$nfiles" -ge 2 ]; then
-			filename=$(basename $di)
-			qsub -N "p2_${TYPE}_$N" -e "log/p2_${TYPE}_$N.err" -o "log/p2_${TYPE}_$N.out" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}",PATH_PARAM=$PATH $SCRIPTS_DIR/run_part2.sh
-		fi
-		N=$((N+1))
-	done
-	waitForProcess 2 $TYPE
-
-else
-	N=0
-	for d in $PWD/preliminary/*
-	do
-		echo $d
-		di=${d%%/};
-		echo $di
-		nfiles=$(find -L $di/*fastq* -type f | wc -l)
-		if [ "$nfiles" -ge 2 ]; then
-			filename=$(basename $di)
-			if (( $N % $PARALLEL == 0 )) ; then
-				wait
-			fi
-			$SCRIPTS_DIR/run_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
-			N=$((N+1))
-		fi
-	done
-	wait
-fi
-
-
+#echo "STARTING PART 2: Building a new reference geonme based on the preliminary repertoire"
+##PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
+#for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
+#do
+#	if [[ -f all_sequences_${chain_prefix}.fa ]]; then
+#		rm -f all_sequences_${chain_prefix}.fa
+#	fi;
+#done
+#
+#if [[ $QSUB -ge 1 ]] ; then
+#	N=1
+#	for d in $PWD/preliminary/*
+#	do
+#		echo $d
+#		di=${d%%/};
+#		echo $di
+#		nfiles=$(find -L $di/*fastq* -type f | wc -l)
+#		if [ "$nfiles" -ge 2 ]; then
+#			filename=$(basename $di)
+#			qsub -N "p2_${TYPE}_$N" -e "log/p2_${TYPE}_$N.err" -o "log/p2_${TYPE}_$N.out" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}",PATH_PARAM=$PATH $SCRIPTS_DIR/run_part2.sh
+#		fi
+#		N=$((N+1))
+#	done
+#	waitForProcess 2 $TYPE
+#
+#else
+#	N=0
+#	for d in $PWD/preliminary/*
+#	do
+#		echo $d
+#		di=${d%%/};
+#		echo $di
+#		nfiles=$(find -L $di/*fastq* -type f | wc -l)
+#		if [ "$nfiles" -ge 2 ]; then
+#			filename=$(basename $di)
+#			if (( $N % $PARALLEL == 0 )) ; then
+#				wait
+#			fi
+#			$SCRIPTS_DIR/run_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
+#			N=$((N+1))
+#		fi
+#	done
+#	wait
+#fi
+#
+#
 for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
 do
 	cat matching_reads_${chain_prefix}_* > all_sequences_${chain_prefix}.fa
 done
+
+rm -rf matching_reads/
+mkdir matching_reads
+mv matching_reads_* matching_reads/
 
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
