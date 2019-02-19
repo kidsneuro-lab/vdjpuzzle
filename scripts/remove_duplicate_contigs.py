@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 # Have to be in the directory containing the chung results
 
 if not os.path.exists('final_receptor_results'):

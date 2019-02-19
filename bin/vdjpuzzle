@@ -24,6 +24,7 @@ if [[ -z ${CONDA_PREFIX+x} ]]; then
 	CURDIR="$PWD"
 	cd $BIN_DIR/../
 	source activate vdjpuzzle
+	conda activate vdjpuzzle
 	cd $CURDIR
 fi
 # If conda_prefix still does not exist, environment hasn't been created - leave this to the user.
@@ -586,7 +587,6 @@ if [ "$RUNR" -ge 1 ]; then
 		index=$((index+1))
 	done
 	rm -rf final_receptor_results
-	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
 fi
 
 # wait for cuffnorm to finish
@@ -763,7 +763,6 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			index=$((index+1))
 		done
 		rm -rf final_receptor_results
-		python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
 	fi
 fi
 
@@ -776,6 +775,12 @@ else
 fi
 find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
 paste cellID.csv readcounts.csv > nreads.csv
-python $SCRIPTS_DIR/merge_results.py
+if [[ -d 'summary_corrected' ]] ; then
+	python $SCRIPTS_DIR/merge_results.py summary_corrected
+	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
+elif [[ -d 'summary' ]] ; then
+	python $SCRIPTS_DIR/merge_results.py summary
+        python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
+fi
 echo "${RECEPTOR_ABBREV} identification complete! Check your results in the final_receptor_results directory."
 echo `date`
