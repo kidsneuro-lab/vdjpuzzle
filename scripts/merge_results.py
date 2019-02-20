@@ -4,29 +4,29 @@ import os
 import sys
 
 
-hasIGH=os.path.isfile("summary_corrected/IGH.csv") 
-hasIGK=os.path.isfile("summary_corrected/IGK.csv") 
-hasIGL=os.path.isfile("summary_corrected/IGL.csv") 
-hasTRA=os.path.isfile("summary_corrected/TRA.csv") 
-hasTRB=os.path.isfile("summary_corrected/TRB.csv") 
-hasTRG=os.path.isfile("summary_corrected/TRG.csv") 
-hasTRD=os.path.isfile("summary_corrected/TRD.csv") 
+hasIGH=os.path.isfile(sys.argv[1] + "/IGH.tsv") 
+hasIGK=os.path.isfile(sys.argv[1] + "/IGK.tsv") 
+hasIGL=os.path.isfile(sys.argv[1] + "/IGL.tsv") 
+hasTRA=os.path.isfile(sys.argv[1] + "/TRA.tsv") 
+hasTRB=os.path.isfile(sys.argv[1] + "/TRB.tsv") 
+hasTRG=os.path.isfile(sys.argv[1] + "/TRG.tsv") 
+hasTRD=os.path.isfile(sys.argv[1] + "/TRD.tsv") 
 
 files=[]
 if (hasIGH):
-    files.append(("IGH","summary_corrected/IGH.csv"))
+    files.append(("IGH",sys.argv[1] + "/IGH.tsv"))
 if (hasIGK):
-    files.append(("IGK","summary_corrected/IGK.csv"))
+    files.append(("IGK",sys.argv[1] + "/IGK.tsv"))
 if (hasIGL):
-    files.append(("IGL","summary_corrected/IGL.csv"))
+    files.append(("IGL",sys.argv[1] + "/IGL.tsv"))
 if (hasTRA):
-    files.append(("TRA","summary_corrected/TRA.csv"))
+    files.append(("TRA",sys.argv[1] + "/TRA.tsv"))
 if (hasTRB):
-    files.append(("TRB","summary_corrected/TRB.csv"))
+    files.append(("TRB",sys.argv[1] + "/TRB.tsv"))
 if (hasTRG):
-    files.append(("TRG","summary_corrected/TRG.csv"))
+    files.append(("TRG",sys.argv[1] + "/TRG.tsv"))
 if (hasTRD):
-    files.append(("TRD","summary_corrected/TRD.csv"))
+    files.append(("TRD",sys.argv[1] + "/TRD.tsv"))
 
 
 Nreads={}
@@ -91,4 +91,4 @@ for f in files:
     cmd="paste "+f[1]+" "+f[1]+".extra > "+f[1]+".final"
     os.system(cmd)
     os.system("mv "+f[1]+".final "+f[1])
-os.system("rm summary_corrected/*.extra")
+os.system("rm " + sys.argv[1] + "/*.extra")

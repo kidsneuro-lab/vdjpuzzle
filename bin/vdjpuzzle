@@ -24,6 +24,7 @@ if [[ -z ${CONDA_PREFIX+x} ]]; then
 	CURDIR="$PWD"
 	cd $BIN_DIR/../
 	source activate vdjpuzzle
+	conda activate vdjpuzzle
 	cd $CURDIR
 fi
 # If conda_prefix still does not exist, environment hasn't been created - leave this to the user.
@@ -364,7 +365,7 @@ if [[ $QSUB -ge 1 ]] ; then
 		nfiles=$(find -L $di/*fastq* -type f | wc -l)
 		if [ "$nfiles" -ge 2 ]; then
 			filename=$(basename $di)
-				qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,P13=$INPUTBAM,P14=$BAMFILES,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part1.sh			
+				qsub -N "p1_${TYPE}_$N" -e "log/p1_${TYPE}_$N.err" -o "log/p1_${TYPE}_$N.out" -V -v P1=$di,P2=$filename,P3=$ORGANISM,P4=$PWD,P5=$TRANSCRIPTOMIC,P6=$TRIM,P7="${CHAIN_ARRAY[*]}",P8="${CHAIN_PREFIX_ARRAY[*]}",P9=$NTHREADS,P10=$USE_MIGMAP_DETAILS,P11=$TRIMG,P12=$SRA,P13=$INPUTBAM,P14=$BAMFILES,P15=$N,PATH_PARAM=$PATH $SCRIPTS_DIR/run_part_1_and_2.sh			
 		fi
 		N=$((N+1))
 	done
@@ -383,7 +384,7 @@ else
 			if (( $N % $PARALLEL == 0 )) ; then
 				wait
 			fi
-			$SCRIPTS_DIR/run_part1.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA $INPUTBAM $BAMFILES &
+			$SCRIPTS_DIR/run_part_1_and_2.sh $di $filename $ORGANISM $PWD $TRANSCRIPTOMIC $TRIM "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" $NTHREADS $USE_MIGMAP_DETAILS $TRIMG $SRA $INPUTBAM $BAMFILES $N &
 		fi
 		N=$((N+1))
 	done
@@ -416,56 +417,60 @@ fi
 
 echo "PART 1 COMPLETE: Preliminary $RECEPTOR_ABBREV repertoire reconstructed."
 
-echo "STARTING PART 2: Building a new reference geonme based on the preliminary repertoire"
-#PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
-for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
-do
-	if [[ -f all_sequences_${chain_prefix}.fa ]]; then
-		rm -f all_sequences_${chain_prefix}.fa
-	fi;
-done
-
-if [[ $QSUB -ge 1 ]] ; then
-	N=1
-	for d in $PWD/preliminary/*
-	do
-		echo $d
-		di=${d%%/};
-		echo $di
-		nfiles=$(find -L $di/*fastq* -type f | wc -l)
-		if [ "$nfiles" -ge 2 ]; then
-			filename=$(basename $di)
-			qsub -N "p2_${TYPE}_$N" -e "log/p2_${TYPE}_$N.err" -o "log/p2_${TYPE}_$N.out" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}",PATH_PARAM=$PATH $SCRIPTS_DIR/run_part2.sh
-		fi
-		N=$((N+1))
-	done
-	waitForProcess 2 $TYPE
-
-else
-	N=0
-	for d in $PWD/preliminary/*
-	do
-		echo $d
-		di=${d%%/};
-		echo $di
-		nfiles=$(find -L $di/*fastq* -type f | wc -l)
-		if [ "$nfiles" -ge 2 ]; then
-			filename=$(basename $di)
-			if (( $N % $PARALLEL == 0 )) ; then
-				wait
-			fi
-			$SCRIPTS_DIR/run_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
-			N=$((N+1))
-		fi
-	done
-	wait
-fi
-
-
+#echo "STARTING PART 2: Building a new reference geonme based on the preliminary repertoire"
+##PART2 - BUILD A NEW REFERENCE GENOME BASED ON THE PRELIMINARY REPERTOIRE
+#for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
+#do
+#	if [[ -f all_sequences_${chain_prefix}.fa ]]; then
+#		rm -f all_sequences_${chain_prefix}.fa
+#	fi;
+#done
+#
+#if [[ $QSUB -ge 1 ]] ; then
+#	N=1
+#	for d in $PWD/preliminary/*
+#	do
+#		echo $d
+#		di=${d%%/};
+#		echo $di
+#		nfiles=$(find -L $di/*fastq* -type f | wc -l)
+#		if [ "$nfiles" -ge 2 ]; then
+#			filename=$(basename $di)
+#			qsub -N "p2_${TYPE}_$N" -e "log/p2_${TYPE}_$N.err" -o "log/p2_${TYPE}_$N.out" -V -v P1=$di,P2=$ORGANISM,P3=$PWD,P4=$N,P5="${CHAIN_ARRAY[*]}",P6="${CHAIN_PREFIX_ARRAY[*]}",PATH_PARAM=$PATH $SCRIPTS_DIR/run_part2.sh
+#		fi
+#		N=$((N+1))
+#	done
+#	waitForProcess 2 $TYPE
+#
+#else
+#	N=0
+#	for d in $PWD/preliminary/*
+#	do
+#		echo $d
+#		di=${d%%/};
+#		echo $di
+#		nfiles=$(find -L $di/*fastq* -type f | wc -l)
+#		if [ "$nfiles" -ge 2 ]; then
+#			filename=$(basename $di)
+#			if (( $N % $PARALLEL == 0 )) ; then
+#				wait
+#			fi
+#			$SCRIPTS_DIR/run_part2.sh $di $ORGANISM $PWD $N "${CHAIN_ARRAY[*]}" "${CHAIN_PREFIX_ARRAY[*]}" &
+#			N=$((N+1))
+#		fi
+#	done
+#	wait
+#fi
+#
+#
 for chain_prefix in "${CHAIN_PREFIX_ARRAY[@]}"
 do
 	cat matching_reads_${chain_prefix}_* > all_sequences_${chain_prefix}.fa
 done
+
+rm -rf matching_reads/
+mkdir matching_reads
+mv matching_reads_* matching_reads/
 
 index=0
 for chain in "${CHAIN_ARRAY[@]}"
@@ -555,7 +560,7 @@ if [ "$RUNR" -ge 1 ]; then
 		head -1 summary/h${index}.txt > summary/header${index}.txt
 		rm summary/${chain//C}tmp.txt
 		rm summary/${chain//C}_cells.txt
-		rm summary/${chain//C}.csv
+		rm summary/${chain//C}.tsv
 
 		for tcr in summary/${chain//C}*;
 		do
@@ -572,7 +577,7 @@ if [ "$RUNR" -ge 1 ]; then
 		cat summary/header${index}.txt summary/${chain//C}tmp.txt > summary/single_cells_${chain//C}.txt
 		echo "CellID" > summary/single_cells_ID_${chain//C}.txt
 		cat summary/${chain//C}_cells.txt >> summary/single_cells_ID_${chain//C}.txt
-		paste -d"\t" summary/single_cells_ID_${chain//C}.txt summary/single_cells_${chain//C}.txt > summary/${chain//C}.csv
+		paste -d"\t" summary/single_cells_ID_${chain//C}.txt summary/single_cells_${chain//C}.txt > summary/${chain//C}.tsv
 		rm summary/h${index}.txt
 		rm summary/header${index}.txt
 		rm summary/${chain//C}tmp.txt
@@ -581,6 +586,7 @@ if [ "$RUNR" -ge 1 ]; then
 		rm summary/single_cells_ID_${chain//C}.txt
 		index=$((index+1))
 	done
+	rm -rf final_receptor_results
 fi
 
 # wait for cuffnorm to finish
@@ -730,7 +736,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			head -1 summary_corrected/h${index}.txt > summary_corrected/header${index}.txt
 			rm summary_corrected/${chain//C}tmp.txt
 			rm summary_corrected/${chain//C}_cells.txt
-			rm summary_corrected/${chain//C}.csv
+			rm summary_corrected/${chain//C}.tsv
 
 			for tcr in summary_corrected/${chain//C}*;
 			do
@@ -747,7 +753,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			cat summary_corrected/header${index}.txt summary_corrected/${chain//C}tmp.txt > summary_corrected/single_cells_${chain//C}.txt
 			echo "CellID" > summary_corrected/single_cells_ID_${chain//C}.txt
 			cat summary_corrected/${chain//C}_cells.txt >> summary_corrected/single_cells_ID_${chain//C}.txt
-			paste -d"\t" summary_corrected/single_cells_ID_${chain//C}.txt summary_corrected/single_cells_${chain//C}.txt > summary_corrected/${chain//C}.csv
+			paste -d"\t" summary_corrected/single_cells_ID_${chain//C}.txt summary_corrected/single_cells_${chain//C}.txt > summary_corrected/${chain//C}.tsv
 			rm summary_corrected/h${index}.txt
 			rm summary_corrected/header${index}.txt
 			rm summary_corrected/${chain//C}tmp.txt
@@ -756,6 +762,7 @@ if [[ $NOERRCORR -lt 1 ]] ; then
 			rm summary_corrected/single_cells_ID_${chain//C}.txt
 			index=$((index+1))
 		done
+		rm -rf final_receptor_results
 	fi
 fi
 
@@ -768,7 +775,12 @@ else
 fi
 find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
 paste cellID.csv readcounts.csv > nreads.csv
-python $SCRIPTS_DIR/merge_results.py
-#mv summary_corrected/${chain//C}.csv summary_corrected/${chain//C}.tsv
-echo "${RECEPTOR_ABBREV} identification complete! Check your results in the summary_corrected directory."
+if [[ -d 'summary_corrected' ]] ; then
+	python $SCRIPTS_DIR/merge_results.py summary_corrected
+	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
+elif [[ -d 'summary' ]] ; then
+	python $SCRIPTS_DIR/merge_results.py summary
+        python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
+fi
+echo "${RECEPTOR_ABBREV} identification complete! Check your results in the final_receptor_results directory."
 echo `date`

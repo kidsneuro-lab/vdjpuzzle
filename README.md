@@ -17,9 +17,9 @@ TCR and BCR reconstruction from scRNA-seq data
 
 Download this repository and move into the VDJPuzzle directory. 
 
-To create the conda environment run `conda create --name vdjpuzzle --file environment-explicit.txt`. If you don't have conda installed, you can find it [here](https://conda.io/docs/user-guide/install/index.html). It is advised to use [miniconda3](https://conda.io/miniconda.html)
+To create the conda environment run `conda env create -f environment.yml`. If you don't have conda installed, you can find it [here](https://conda.io/docs/user-guide/install/index.html). It is advised to use [miniconda3](https://conda.io/miniconda.html)
 
-Type `source activate vdjpuzzle` to activate the environment. 
+Type `conda activate vdjpuzzle` to activate the environment (Note: if you have an earlier version of conda, you will need to type `source activate vdjpuzzle` instead).
 
 Symlink or copy bin/vdjpuzzle into your path by copying the following command in the .bashrc file in your home directory and substituting path_to_vdjpuzzle_dir with the absolute VDJPuzzle directory
 
