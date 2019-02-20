@@ -780,7 +780,7 @@ if [[ -d 'summary_corrected' ]] ; then
 	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
 elif [[ -d 'summary' ]] ; then
 	python $SCRIPTS_DIR/merge_results.py summary
-        python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
+	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary
 fi
 echo "${RECEPTOR_ABBREV} identification complete! Check your results in the final_receptor_results directory."
 echo `date`
