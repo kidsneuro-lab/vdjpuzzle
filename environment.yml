@@ -63,6 +63,7 @@ dependencies:
 - mkl_random=1.0.2
 - numpy=1.15.4
 - pandas=0.24.1
+- kallisto=0.44.0
 - blast=2.7.1
 - igblast=1.7.0
 - hmmer=3.1b2
