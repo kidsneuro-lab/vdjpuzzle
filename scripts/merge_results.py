@@ -10,23 +10,23 @@ hasIGL=os.path.isfile(sys.argv[1] + "/IGL.tsv")
 hasTRA=os.path.isfile(sys.argv[1] + "/TRA.tsv") 
 hasTRB=os.path.isfile(sys.argv[1] + "/TRB.tsv") 
 hasTRG=os.path.isfile(sys.argv[1] + "/TRG.tsv") 
-hasTRD=os.path.isfile(sys.argv[1] + "/TRD.tsv") 
+hasTRD=os.path.isfile(sys.argv[1] + "/TRD.tsv")
 
 files=[]
 if (hasIGH):
-    files.append(("IGH",sys.argv[1] + "/IGH.tsv"))
+    files.append(("IGH","summary_corrected/IGH.tsv"))
 if (hasIGK):
-    files.append(("IGK",sys.argv[1] + "/IGK.tsv"))
+    files.append(("IGK","summary_corrected/IGK.tsv"))
 if (hasIGL):
-    files.append(("IGL",sys.argv[1] + "/IGL.tsv"))
+    files.append(("IGL","summary_corrected/IGL.tsv"))
 if (hasTRA):
-    files.append(("TRA",sys.argv[1] + "/TRA.tsv"))
+    files.append(("TRA","summary_corrected/TRA.tsv"))
 if (hasTRB):
-    files.append(("TRB",sys.argv[1] + "/TRB.tsv"))
+    files.append(("TRB","summary_corrected/TRB.tsv"))
 if (hasTRG):
-    files.append(("TRG",sys.argv[1] + "/TRG.tsv"))
+    files.append(("TRG","summary_corrected/TRG.tsv"))
 if (hasTRD):
-    files.append(("TRD",sys.argv[1] + "/TRD.tsv"))
+    files.append(("TRD","summary_corrected/TRD.tsv"))
 
 
 Nreads={}
@@ -58,13 +58,16 @@ for f in files:
                 max_identity=0
                 mem_sec="NA"
                 if f[0]=="IGH":
-                    mem_sec="Secreted"
+                    mem_sec="Not found"
                     hasIGH=os.path.isfile(hmmfile) 
                     if hasIGH:
                         with open(hmmfile, 'r') as hmmOutput:
                             for line3 in hmmOutput:
                                 if seqID in line3:
-                                    mem_sec="Membrane"
+                                    if 'membrane' in line3:
+                                        mem_sec="Membrane" 
+                                    else:
+                                        mem_sec="Secreted"
                 if os.path.isfile(blastfile):
                     with open(blastfile, 'r') as blastOutput:
                         for line2 in blastOutput:
@@ -91,4 +94,4 @@ for f in files:
     cmd="paste "+f[1]+" "+f[1]+".extra > "+f[1]+".final"
     os.system(cmd)
     os.system("mv "+f[1]+".final "+f[1])
-os.system("rm " + sys.argv[1] + "/*.extra")
+os.system("rm summary_corrected/*.extra")
