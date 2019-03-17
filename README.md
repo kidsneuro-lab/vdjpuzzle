@@ -11,7 +11,7 @@ TCR and BCR reconstruction from scRNA-seq data
 * TCR and BCR expression quantification
 * kallisto quantification
 * Isotype Identification 
-* membrane bound vs secreted calling
+* membrane bound vs secreted isoforms detection
 
 ## Setup
 
@@ -74,16 +74,14 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 
 ## how cellIDs are extracted (important when bam files are given as input)
 
-
 ## Run VDJPuzzle on a cluster
 VDJPuzzle support the execution on a system with PBS scheduler by adding the --qsub option. Every system has different parameters, thus make sure to change these parameters at the beginning of the .sh files in the script directory. 
 
+## VDJPuzzle Output visualization on VDJView 
+The output of VDJPuzzle in final_receptor_results (TCR/BCR data) along with gene expression data in CuffNorm directory can be uploaded/visualized in VDJView. A complete guideline is provided on VDJView page that intergates multiple single cell visualization tools in R Shinny App  [VDJView](https://bitbucket.org/kirbyvisp/vdjview/src/master/)
 
 ## Citation
 
-VDJPuzzle 2.0:
+VDJPuzzle:
 Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Bioinformatics, Volume 34, Issue 16, 15 August 2018, Pages 2846–2847, https://doi.org/10.1093/bioinformatics/bty203
-
-VDJPuzzle 3.0:
-Manuscript in preparation
 
