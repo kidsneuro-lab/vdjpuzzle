@@ -78,7 +78,7 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 VDJPuzzle support the execution on a system with PBS scheduler by adding the --qsub option. Every system has different parameters, thus make sure to change these parameters at the beginning of the .sh files in the script directory. 
 
 ## VDJPuzzle Output visualization on VDJView 
-The output of VDJPuzzle in final_receptor_results (TCR/BCR data) along with gene expression data in CuffNorm directory can be uploaded/visualized in VDJView. A complete guideline is provided on VDJView page that intergates multiple single cell visualization tools in R Shinny App  [VDJView](https://bitbucket.org/kirbyvisp/vdjview/src/master/)
+The output of VDJPuzzle in the final_receptor_results directory(TCR/BCR data) along with the gene expression data in the CuffNorm directory can be uploaded/visualized in VDJView. A complete guideline is provided on the [VDJView page](https://bitbucket.org/kirbyvisp/vdjview/src/master/). VDJView intergates multiple single cell visualization and analysis tools into a single R Shiny App.
 
 ## Citation
 
