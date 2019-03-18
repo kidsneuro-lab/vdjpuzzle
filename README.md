@@ -25,7 +25,7 @@ Symlink or copy bin/vdjpuzzle into your path by copying the following command in
 
 `export PATH=/path_to_vdjpuzzle_dir/bin:$PATH`
 
-VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). This contains the bowtie index and genome annotation required to run VDJPuzzle.
+VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). This contains the bowtie index and genome annotation required to run VDJPuzzle. The latest human genome reference can be downloaded from this link [Humanx38](https://unsw-my.sharepoint.com/:f:/g/personal/z5168329_ad_unsw_edu_au/EvKq-aVsVDlFq3Imjjr80qsBUTF34oyyVfWmtZGqYerjWw?e=65sEV4) 
 
 run an example with `nohup vdjpuzzle Example --bowtie-index=path_to_bt2_index/genome --gtf=path_to_gene_annotations.gtf > LOG.txt &` from the VDJPuzzle directory, you can run it on a different directory but make sure that "Example" is pointing to the Example directory in this repository.
 
