@@ -14,19 +14,19 @@ hasTRD=os.path.isfile(sys.argv[1] + "/TRD.tsv")
 
 files=[]
 if (hasIGH):
-    files.append(("IGH","summary_corrected/IGH.tsv"))
+    files.append(("IGH", sys.argv[1] + "/IGH.tsv"))
 if (hasIGK):
-    files.append(("IGK","summary_corrected/IGK.tsv"))
+    files.append(("IGK", sys.argv[1] + "/IGK.tsv"))
 if (hasIGL):
-    files.append(("IGL","summary_corrected/IGL.tsv"))
+    files.append(("IGL", sys.argv[1] + "/IGL.tsv"))
 if (hasTRA):
-    files.append(("TRA","summary_corrected/TRA.tsv"))
+    files.append(("TRA", sys.argv[1] + "/TRA.tsv"))
 if (hasTRB):
-    files.append(("TRB","summary_corrected/TRB.tsv"))
+    files.append(("TRB", sys.argv[1] + "/TRB.tsv"))
 if (hasTRG):
-    files.append(("TRG","summary_corrected/TRG.tsv"))
+    files.append(("TRG", sys.argv[1] + "/TRG.tsv"))
 if (hasTRD):
-    files.append(("TRD","summary_corrected/TRD.tsv"))
+    files.append(("TRD", sys.argv[1] + "/TRD.tsv"))
 
 
 Nreads={}
