@@ -770,9 +770,9 @@ fi
 
 #generate n reads file
 if [ "$TRIM" -ge 1 ]; then
-	find $RNADIR -name "PAIRED*1.fastq*" -type f -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this when trim is used
+	find LIY6150_B_cells_15_03_2019 -type f \( -name "PAIRED*_R1_001.fastq*" -o -name "PAIRED*_R1.fastq.gz" -o -name "PAIRED*_1.fastq.gz" \) -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this when trim is used
 else
-	find $RNADIR -name "*_1.fastq*" -type f -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this when no trim option is used
+	find $RNADIR -type f \( -name "*R1_001.fastq.gz" -o -name "*R1.fastq.gz" -o -name "*_1.fastq.gz" \) -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this when no trim option is used
 
 fi
 find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
