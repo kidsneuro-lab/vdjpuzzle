@@ -11,7 +11,7 @@ TCR and BCR reconstruction from scRNA-seq data
 * TCR and BCR expression quantification
 * kallisto quantification
 * Isotype Identification 
-* membrane bound vs secreted calling
+* membrane bound vs secreted isoforms detection
 
 ## Setup
 
@@ -25,7 +25,7 @@ Symlink or copy bin/vdjpuzzle into your path by copying the following command in
 
 `export PATH=/path_to_vdjpuzzle_dir/bin:$PATH`
 
-VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). This contains the bowtie index and genome annotation required to run VDJPuzzle.
+VDJPuzzle requires the [Ensembl reference genome](https://ccb.jhu.edu/software/tophat/igenomes.shtml). Other reference genome can be utilized (see details below). This contains the bowtie index and genome annotation required to run VDJPuzzle. The latest human genome reference can be downloaded from this link [Humanx38](https://unsw-my.sharepoint.com/:f:/g/personal/z5168329_ad_unsw_edu_au/EvKq-aVsVDlFq3Imjjr80qsBUTF34oyyVfWmtZGqYerjWw?e=65sEV4) 
 
 run an example with `nohup vdjpuzzle Example --bowtie-index=path_to_bt2_index/genome --gtf=path_to_gene_annotations.gtf > LOG.txt &` from the VDJPuzzle directory, you can run it on a different directory but make sure that "Example" is pointing to the Example directory in this repository.
 
@@ -74,16 +74,14 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 
 ## how cellIDs are extracted (important when bam files are given as input)
 
-
 ## Run VDJPuzzle on a cluster
 VDJPuzzle support the execution on a system with PBS scheduler by adding the --qsub option. Every system has different parameters, thus make sure to change these parameters at the beginning of the .sh files in the script directory. 
 
+## VDJPuzzle Output visualization on VDJView 
+The output of VDJPuzzle in the final_receptor_results directory(TCR/BCR data) along with the gene expression data in the CuffNorm directory can be uploaded/visualized in VDJView. A complete guideline is provided on the [VDJView page](https://bitbucket.org/kirbyvisp/vdjview/src/master/). VDJView intergates multiple single cell visualization and analysis tools into a single R Shiny App.
 
 ## Citation
 
-VDJPuzzle 2.0:
+VDJPuzzle:
 Simone Rizzetto, David NP Koppstein, Jerome Samir, Mandeep Singh, Joanne H Reed, Curtis H Cai, Andrew R Lloyd, Auda A Eltahla, Christopher C Goodnow, and Fabio Luciani. B-cell receptor reconstruction from single-cell RNA-seq with VDJPuzzle. Bioinformatics, Volume 34, Issue 16, 15 August 2018, Pages 2846–2847, https://doi.org/10.1093/bioinformatics/bty203
-
-VDJPuzzle 3.0:
-Manuscript in preparation
 
