@@ -61,7 +61,7 @@ rna_seq_directory_name contains the fastq files organized by single cell (i.e. o
 |--star-index=path\_to\_star_index| star index directory 
 |--align=star\_if star aligner is used instead of tophat|
 |--gtf=path\_to\_gtf\|Location of the GTF annotation file|
-|--bam=path\_to\bam_files\|Location of bam files. Bam Files should contains the cellIDs in the input RNA-seq data or be organized in folders with the same name of the cellIDs|
+|--bam=path\_to\bam_files\|Location of bam files. Bam Files should contain the CellIDs of the input RNA-seq data, and be organized in folders with the CellID as the name. E.g. for cells "CellA1" and "CellA2" the contents of the bam_files folder should be ./CellA1/CellA1.bam and ./CellA1/CellA1.bam.|
 
 An additional script to plot gene expression as an heatmap annotated with mutation rates and other phenotype data is provided in scripts/mutation\_gene\_expression\_analysis.R
 
