@@ -72,7 +72,6 @@ An additional script to plot gene expression as an heatmap annotated with mutati
 |-f file|CuffNorm FPKM matrix|
 |-a file|Annotation file for each cell. First column contains cell ID|
 
-## how cellIDs are extracted (important when bam files are given as input)
 
 ## Run VDJPuzzle on a cluster
 VDJPuzzle support the execution on a system with PBS scheduler by adding the --qsub option. Every system has different parameters, thus make sure to change these parameters at the beginning of the .sh files in the script directory. 
