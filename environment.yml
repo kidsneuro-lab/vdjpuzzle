@@ -23,8 +23,8 @@ dependencies:
 - subread=1.5.2
 - tbb=2018_20171205
 - tk=8.5.18
-- xz=5.2.2
-- zlib=1.2.8
+- xz=5.2.4
+- zlib=1.2.11
 - bedops=2.4.26
 - bedtools=2.26.0
 - bwa=0.7.15
@@ -41,7 +41,7 @@ dependencies:
 - slclust=02022010
 - trimmomatic=0.36
 - curl=7.52.1
-- migmap=1.0.2
+- migmap=1.0.3
 - perl-file-find-rule=0.34
 - python=2.7.13
 - bcftools=1.4.1
@@ -65,5 +65,5 @@ dependencies:
 - pandas=0.24.1
 - kallisto=0.44.0
 - blast=2.7.1
-#- igblast=1.7.0
+- igblast=1.10.0
 - hmmer=3.1b2

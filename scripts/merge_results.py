@@ -14,19 +14,19 @@ hasTRD=os.path.isfile(sys.argv[1] + "/TRD.tsv")
 
 files=[]
 if (hasIGH):
-    files.append(("IGH", sys.argv[1] + "/IGH.tsv"))
+    files.append(("IGH","summary_corrected/IGH.tsv"))
 if (hasIGK):
-    files.append(("IGK", sys.argv[1] + "/IGK.tsv"))
+    files.append(("IGK","summary_corrected/IGK.tsv"))
 if (hasIGL):
-    files.append(("IGL", sys.argv[1] + "/IGL.tsv"))
+    files.append(("IGL","summary_corrected/IGL.tsv"))
 if (hasTRA):
-    files.append(("TRA", sys.argv[1] + "/TRA.tsv"))
+    files.append(("TRA","summary_corrected/TRA.tsv"))
 if (hasTRB):
-    files.append(("TRB", sys.argv[1] + "/TRB.tsv"))
+    files.append(("TRB","summary_corrected/TRB.tsv"))
 if (hasTRG):
-    files.append(("TRG", sys.argv[1] + "/TRG.tsv"))
+    files.append(("TRG","summary_corrected/TRG.tsv"))
 if (hasTRD):
-    files.append(("TRD", sys.argv[1] + "/TRD.tsv"))
+    files.append(("TRD","summary_corrected/TRD.tsv"))
 
 
 Nreads={}
@@ -48,8 +48,8 @@ for f in files:
             if linecount>1:
                 cellID=line.split('\t')[0]
                 seqID=line.split('\t')[1]
-                seqID=seqID.split(' ')[0] #remove everything after space
-                seqID=seqID[1::] #remove > symbol
+                #seqID=seqID.split(' ')[0] #remove everything after space
+                #seqID=seqID[1::] #remove > symbol
                 cellID=cellID[4::]
                 #find constant
                 blastfile="blast/"+f[0]+"_"+cellID+".out"
