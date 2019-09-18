@@ -80,6 +80,7 @@ for f in files:
                 #find expression
                 expressionfile="kallisto/"+f[0]+"_"+cellID+"/"+f[0]+"_out/abundance.tsv"
                 tpm="0"
+		rpkm="NA"
                 if os.path.isfile(expressionfile):
                     with open(expressionfile, 'r') as expressionOutput:
                         for line2 in expressionOutput:
