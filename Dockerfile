@@ -48,7 +48,4 @@ RUN /opt/conda/bin/conda config --add channels defaults && \
 /opt/conda/bin/conda env create -f /opt/vdjpuzzle/environment.yml &&\
 chown -R pbsuser:pbsuser /opt/vdjpuzzle &&\
 chown -R pbsuser:pbsuser /opt/conda
-# ADD ./bowtieIndex /opt/vdjpuzzle/bowtieIndex
-# ADD ./Homo_sapiens.GRCh38.89.gtf
-/opt/vdjpuzzle/Homo_sapiens.GRCh38.89.gtf
 CMD ["/bin/bash"]
