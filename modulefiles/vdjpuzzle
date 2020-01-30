@@ -1,0 +1,22 @@
+#%Module1.0#####################################################################
+##
+##
+proc ModulesHelp { } {
+	global version
+
+	puts stderr "VDJPuzzle - TCR and BCR reconstruction from scRNA-seq data"
+	puts stderr "\n\tVersion $version\n"
+}
+
+# for Tcl script use only
+set	 version		2019.1
+set	_version_		[ string map {. -} $version ]
+
+module-whatis	"See: https://bitbucket.org/kirbyvisp/vdjpuzzle/src/master/"
+set path /opt/vdjpuzzle
+prepend-path PATH  $path/bin
+if [ module-info mode load ] {
+	ModulesHelp
+        puts stdout "source /opt/conda/etc/profile.d/conda.sh;"
+}
+

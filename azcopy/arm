@@ -1,0 +1,42 @@
+#!/bin/bash
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    source asas
+else
+    [[ -z "${sname}" ]] && sname="-not-set-"
+    [[ -z "${aurl}" ]] && aurl="-not-set-"
+    [[ -z "${mysas}" ]] && mysas="-not-set-"
+    [[ -z "${contain}" ]] && contain="-not-set-"
+    tmp_contain="${contain}"
+    tmp_aurl="${aurl}"
+    tmp_sname="${sname}"
+    old_sname=$sname                         
+    old_aurl=$aurl                         
+    old_contain=$contain                 
+    old_mysas=$mysas                     
+fi
+
+[[ "${sname}" == "-not-set-" ]]                                                      &&
+    echo                                                              && 
+    read -p "Enter the Azure Storage Account Name (or type Enter to keep: ${old_sname} ): " tmp_sname
+
+[[ -z "${tmp_sname}" ]] && export sname="${old_sname}" || export sname="${tmp_sname}"
+[[ -z "${tmp_sname}" ]] && export aurl="https://${old_sname}.blob.core.windows.net" || export aurl="https://${tmp_sname}.blob.core.windows.net"
+
+[[ "${contain}" == "-not-set-" ]]  &&
+    echo                           && 
+    read -p "Enter the Container Name (or type Enter to keep: ${old_contain} ): " tmp_contain
+
+[[ -z "${tmp_contain}" ]] && export contain="${old_contain}" || export contain="${tmp_contain}"
+
+if [[ "${mysas}" == "-not-set-" ]]; then
+    echo                                                               
+    read -s -p "Enter the Account Key (or type Enter to keep existing SAS: ${old_mysas} ): " tmp_mysas
+
+    if [[ -z "${tmp_mysas}" ]]; then
+        export mysas="${old_mysas}"
+    else
+        export mysas=?$(az storage container generate-sas --account-name "${sname}" --account-key "${tmp_mysas}" --name "${contain}" --expiry 2019-12-31T08:00:00Z --permissions rwdl | tr -d '"') && echo "New SAS generated!"
+    fi
+fi
+
+azcopy rm $aurl/${contain}/${1}"${mysas}" --include="${2}"
