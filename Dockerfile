@@ -2,9 +2,7 @@ FROM syin2018/ccia:2018workshop2
 ENV LANG=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 RUN yum install -y wget bzip2 git ca-certificates curl which
-RUN wget --quiet
-https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O
-~/miniconda.sh && \
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh && \
 /bin/bash ~/miniconda.sh -b -p /opt/conda && \
 rm ~/miniconda.sh && \
 mkdir -p /opt/vdjpuzzle && \
@@ -34,12 +32,9 @@ ADD ./share /opt/vdjpuzzle/share
 ADD ./Example /opt/vdjpuzzle/Example
 ADD ./LICENSE.txt /opt/vdjpuzzle/LICENSE.txt
 ADD ./scripts /opt/vdjpuzzle/scripts
-RUN sed -i 's/#PBS -l wd/cd "${PBS_O_WORKDIR}"/g'
-/opt/vdjpuzzle/scripts/run_part_1_and_2.sh && \
-sed -i 's/#PBS -q normal/#PBS -q workq/g'
-/opt/vdjpuzzle/scripts/run_part_1_and_2.sh && \
-sed -i 's/#PBS -l wd/cd "${PBS_O_WORKDIR}"/g'
-/opt/vdjpuzzle/scripts/run_part3.sh && \
+RUN sed -i 's/#PBS -l wd/cd "${PBS_O_WORKDIR}"/g' /opt/vdjpuzzle/scripts/run_part_1_and_2.sh && \
+sed -i 's/#PBS -q normal/#PBS -q workq/g' /opt/vdjpuzzle/scripts/run_part_1_and_2.sh && \
+sed -i 's/#PBS -l wd/cd "${PBS_O_WORKDIR}"/g' /opt/vdjpuzzle/scripts/run_part3.sh && \
 sed -i 's/#PBS -q normal/#PBS -q workq/g' /opt/vdjpuzzle/scripts/run_part3.sh
 ADD ./modulefiles/vdjpuzzle /usr/share/Modules/modulefiles/vdjpuzzle/2019.1
 RUN /opt/conda/bin/conda config --add channels defaults && \
