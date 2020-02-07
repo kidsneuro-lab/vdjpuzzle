@@ -3,6 +3,7 @@ channels:
 - bioconda
 - conda-forge
 - defaults
+- 'https://repo.continuum.io/pkgs/free'
 dependencies:
 - blas=1.0
 - bzip2=1.0.6
