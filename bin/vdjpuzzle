@@ -781,9 +781,8 @@ else
 	find $RNADIR -type f \( -name "*R1_001.fastq.gz" -o -name "*R1.fastq.gz" -o -name "*_1.fastq.gz" \) -exec sh -c "zcat {} | wc -l" \; > readcounts.csv #this when no trim option is used
 fi
 find $RNADIR -type d -mindepth 1 -exec basename {} \; > cellID.csv
-sed 's/reversed|//' summary_corrected/*.tsv  
+sed -i 's/reversed|//' summary_corrected/*.tsv  
 paste cellID.csv readcounts.csv > nreads.csv
-sed -i 'reversed|//' summary_corrected/*.tsv
 if [[ -d 'summary_corrected' ]] ; then
 	python $SCRIPTS_DIR/merge_results.py summary_corrected
 	python $SCRIPTS_DIR/remove_duplicate_contigs.py summary_corrected
