@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/bash --login
 
 # THIS VERSION IS A COPY OF THE LATEST VERSION AT 3 June 2017, AND MADE FOR RAIJIN
 
-set -x # echo on, command fails causes script to exit, pipes fail
+# set -x # echo on, command fails causes script to exit, pipes fail
 
 # get the directory of the current script
 # from https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
