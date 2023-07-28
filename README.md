@@ -1,6 +1,20 @@
 ## VDJPuzzle 
 
+## Addendum on 28 July 2023
 
+![docker-image.yml](https://github.com/kidsneuro-lab/vdjpuzzle/actions/workflows/docker-image.yml/badge.svg?branch=main)
+
+This is based on the original author's commit [c695ac](https://bitbucket.org/kirbyvisp/vdjpuzzle/commits/c695ac331151cc7a286bbf90c844c8c2948a84ec). It's unsure if the original maintainer is updating this package or not (last update was back in Mar 2020). This repo is purely intended to get `vdjpuzzle` to a working state with a Dockerhub image so that it's easier to run.
+
+**Pull image from Dockerhub**
+```
+docker pull schnknc/vdjpuzzle:latest
+```
+
+**Run vdjpuzzle**
+```
+docker run --rm schnknc/vdjpuzzle
+```
 
 TCR and BCR reconstruction from scRNA-seq data
 
